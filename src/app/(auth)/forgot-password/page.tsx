@@ -7,11 +7,13 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { InputField } from "@/components/auth/FormInputs";
+import { useAuthStore } from "@/store/auth";
 
 export default function ForgotPassword() {
+  const { forgotPassword, isLoading } = useAuthStore();
+  
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,10 +28,14 @@ export default function ForgotPassword() {
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setIsSent(true);
+    const result = await forgotPassword(email);
+    
+    if (result.success) {
+      setIsSent(true);
+    } else {
+      // Siempre mostramos éxito por seguridad (no revelar si el email existe)
+      setIsSent(true);
+    }
   };
 
   return (
@@ -127,7 +133,7 @@ export default function ForgotPassword() {
           </h3>
           <p className="mb-6 text-sm text-green-700">
             Hemos enviado las instrucciones a <strong>{email}</strong>. Revisa
-            tu bandeja de entrada (y spam).
+            tu bandeja de entrada y también la carpeta de spam.
           </p>
           <Link
             href="/login"

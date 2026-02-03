@@ -1,8 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import { Clock, MessageCircle } from "lucide-react";
 import Link from "next/link";
+
+const WHATSAPP_NUMBER = "59891351103";
+const WHATSAPP_MESSAGE = encodeURIComponent(
+  "Hola, me registré en High Ticket English y mi cuenta está pendiente de aprobación. ¿Podrían ayudarme?",
+);
 
 export default function Pending() {
   return (
@@ -27,6 +32,16 @@ export default function Pending() {
       </p>
 
       <div className="space-y-4 w-full">
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3.5 text-sm font-bold text-white transition-colors hover:bg-green-700"
+        >
+          <MessageCircle className="h-4 w-4" />
+          Contactar Soporte
+        </a>
+        
         <Link
           href="/"
           className="block w-full rounded-xl bg-gray-100 py-3.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-200"

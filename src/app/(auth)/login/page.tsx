@@ -1,23 +1,25 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { InputField, PasswordField } from "@/components/auth/FormInputs";
+import { useAuthStore } from "@/store/auth";
 
 export default function Login() {
   const router = useRouter();
+  const { login, isLoading, error, clearError } = useAuthStore();
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const validateField = (field: string, value: string) => {
     switch (field) {
@@ -37,28 +39,48 @@ export default function Login() {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    const error = validateField(field, value);
-    setErrors((prev) => ({ ...prev, [field]: error }));
+    const validationError = validateField(field, value);
+    setValidationErrors((prev) => ({ ...prev, [field]: validationError }));
+    // Limpiar error del servidor al escribir
+    if (error) clearError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validación del formulario
     const newErrors: Record<string, string> = {};
     Object.keys(formData).forEach((key) => {
-      const error = validateField(key, formData[key as keyof typeof formData]);
-      if (error) newErrors[key] = error;
+      const validationError = validateField(key, formData[key as keyof typeof formData]);
+      if (validationError) newErrors[key] = validationError;
     });
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      setValidationErrors(newErrors);
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    router.push("/dashboard");
+    // Llamar al API
+    const result = await login({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (result.success) {
+      // Login exitoso - redirigir al dashboard
+      router.push("/dashboard");
+    } else {
+      // Manejar redirecciones según el código de error
+      switch (result.code) {
+      case "ACCOUNT_PENDING":
+        router.push("/pending");
+        break;
+      case "ACCOUNT_SUSPENDED":
+        router.push("/suspended");
+        break;
+        // INVALID_CREDENTIALS se muestra como error en el formulario
+      }
+    }
   };
 
   return (
@@ -85,6 +107,18 @@ export default function Login() {
         </p>
       </div>
 
+      {/* Error del servidor */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit}>
         <InputField
           id="email"
@@ -92,7 +126,7 @@ export default function Login() {
           type="email"
           value={formData.email}
           onChange={(v) => handleChange("email", v)}
-          error={errors.email}
+          error={validationErrors.email}
           placeholder="tu@email.com"
         />
 
@@ -104,7 +138,7 @@ export default function Login() {
             onChange={(v) => handleChange("password", v)}
             show={showPassword}
             onToggle={() => setShowPassword(!showPassword)}
-            error={errors.password}
+            error={validationErrors.password}
           />
           <div className="mt-1 flex justify-end">
             <Link
@@ -119,7 +153,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={isLoading}
-          className="group relative mt-6 flex w-full items-center justify-center overflow-hidden rounded-xl bg-brand-cyan-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:-translate-y-0.5 hover:bg-[#2eaa c2] hover:shadow-xl hover:shadow-brand-cyan-dark/30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:opacity-70"
+          className="group relative mt-6 flex w-full items-center justify-center overflow-hidden rounded-xl bg-brand-cyan-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:-translate-y-0.5 hover:bg-[#2eaac2] hover:shadow-xl hover:shadow-brand-cyan-dark/30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:opacity-70"
         >
           <div className="relative flex items-center gap-2">
             {isLoading ? (

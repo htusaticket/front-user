@@ -323,7 +323,7 @@ export default function ChallengesPage() {
                         <div className="space-y-2">
                           {question.options.map((option, oIndex) => (
                             <label
-                              key={oIndex}
+                              key={`${question.id}-${option}`}
                               className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${
                                 quizAnswers[challenge.id]?.[question.id] === oIndex
                                   ? "border-brand-cyan-dark bg-brand-cyan-dark/5"

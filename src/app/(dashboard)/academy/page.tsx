@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 // Type definitions
@@ -163,10 +164,11 @@ export default function AcademyPage() {
                   <div className="absolute inset-0 z-10 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
                   
                   {/* Image */}
-                  <img
+                  <Image
                     src={module.image}
                     alt={module.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   
                   {/* Text Overlay on Image */}

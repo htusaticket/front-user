@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertTriangle, Mail } from "lucide-react";
+import { AlertTriangle, MessageCircle } from "lucide-react";
+import Link from "next/link";
+
+const WHATSAPP_NUMBER = "59891351103";
+const WHATSAPP_MESSAGE = encodeURIComponent(
+  "Hola, mi cuenta en High Ticket English ha sido suspendida. Me gustaría resolver esta situación y regularizar mi acceso.",
+);
 
 export default function Suspended() {
   return (
@@ -26,18 +32,27 @@ export default function Suspended() {
       </p>
 
       <div className="w-full rounded-2xl bg-gray-50 p-6 text-left">
-        <h3 className="mb-2 font-bold text-gray-900">¿Crees que es un error?</h3>
+        <h3 className="mb-2 font-bold text-gray-900">¿Quieres regularizar tu acceso?</h3>
         <p className="mb-4 text-sm text-gray-500">
-          Ponte en contacto con nuestro equipo de soporte para revisar tu caso.
+          Ponte en contacto con nuestro equipo por WhatsApp para resolver tu situación rápidamente.
         </p>
         <a
-          href="mailto:soporte@jfalcon.com"
-          className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark py-3 text-sm font-bold text-white transition-colors hover:bg-[#2eaa c2]"
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 rounded-xl bg-green-600 py-3 text-sm font-bold text-white transition-colors hover:bg-green-700"
         >
-          <Mail className="h-4 w-4" />
-          Contactar Soporte
+          <MessageCircle className="h-4 w-4" />
+          Contactar por WhatsApp
         </a>
       </div>
+
+      <Link
+        href="/"
+        className="mt-6 text-sm font-bold text-gray-500 transition-colors hover:text-gray-700 hover:underline"
+      >
+        Volver al Inicio
+      </Link>
     </motion.div>
   );
 }

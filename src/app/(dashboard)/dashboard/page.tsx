@@ -181,7 +181,11 @@ export default function DashboardPage() {
                   Complete today&apos;s challenge to maintain your streak
                 </p>
 
-                <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:bg-brand-cyan">
+                <button
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl
+                    bg-brand-cyan-dark px-5 py-3 text-sm font-bold text-white shadow-lg
+                    shadow-brand-cyan-dark/20 transition-all hover:bg-brand-cyan"
+                >
                   <Sparkles className="h-4 w-4" />
                   Start Challenge
                 </button>
