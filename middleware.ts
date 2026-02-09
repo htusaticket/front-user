@@ -22,8 +22,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 2. Con token y activo intentando acceder a login/register → dashboard
-  if (token && userStatus === "ACTIVE" && isPublicAuthPath) {
+  // 2. Con token y activo intentando acceder a login/register o root → dashboard
+  if (token && userStatus === "ACTIVE" && (isPublicAuthPath || pathname === "/")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -42,6 +42,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/academy/:path*",
     "/challenges/:path*",

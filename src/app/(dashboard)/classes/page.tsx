@@ -13,139 +13,80 @@ import {
   LayoutGrid,
   CalendarDays,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-// Mock data
-type ClassType = "regular" | "workshop";
-
-interface ClassSession {
-  id: number;
-  title: string;
-  type: ClassType;
-  day: string;
-  date: string;
-  time: string;
-  capacity: { current: number; max: number | null }; // null max means unlimited
-  isEnrolled: boolean;
-  meetLink?: string;
-  isFull?: boolean;
-  description?: string;
-}
-
-const upcomingClasses: ClassSession[] = [
-  {
-    id: 1,
-    title: "Conversational Advanced II",
-    type: "regular",
-    day: "Today",
-    date: "Jan 29",
-    time: "18:00 - 19:00",
-    capacity: { current: 3, max: 5 },
-    isEnrolled: true,
-    meetLink: "https://meet.google.com/xxx",
-    description: "Advanced conversation practice focusing on current events.",
-  },
-  {
-    id: 2,
-    title: "Grammar Review Session",
-    type: "regular",
-    day: "Tomorrow",
-    date: "Jan 30",
-    time: "17:00 - 18:00",
-    capacity: { current: 5, max: 5 },
-    isEnrolled: false,
-    isFull: true,
-    description: "Deep dive into complex grammar structures and common mistakes.",
-  },
-  {
-    id: 3,
-    title: "Business English Masterclass",
-    type: "workshop",
-    day: "Friday",
-    date: "Jan 31",
-    time: "19:00 - 20:30",
-    capacity: { current: 12, max: null },
-    isEnrolled: false,
-    description: "Open workshop on professional communication skills.",
-  },
-  {
-    id: 4,
-    title: "Pronunciation Workshop",
-    type: "workshop",
-    day: "Saturday",
-    date: "Feb 01",
-    time: "10:00 - 11:30",
-    capacity: { current: 45, max: null },
-    isEnrolled: false,
-    description: "Interactive session to master difficult phonemes and intonation.",
-  },
-  {
-    id: 5,
-    title: "Debate Club: A.I. Ethics",
-    type: "regular",
-    day: "Saturday",
-    date: "Feb 01",
-    time: "14:00 - 15:30",
-    capacity: { current: 4, max: 8 },
-    isEnrolled: false,
-    description: "Structured debate practice. Topic: Artificial Intelligence Ethics.",
-  },
-  {
-    id: 6,
-    title: "IELTS Prep: Writing Task 2",
-    type: "regular",
-    day: "Monday",
-    date: "Feb 03",
-    time: "18:00 - 19:00",
-    capacity: { current: 2, max: 6 },
-    isEnrolled: false,
-    description: "Focused strategy session for the IELTS writing component.",
-  },
-  {
-    id: 7,
-    title: "Casual Coffee Chat",
-    type: "regular",
-    day: "Tuesday",
-    date: "Feb 04",
-    time: "09:00 - 10:00",
-    capacity: { current: 3, max: 5 },
-    isEnrolled: false,
-    description: "Informal conversation practice over morning coffee.",
-  },
-  {
-    id: 8,
-    title: "Tech Vocabulary Workshop",
-    type: "workshop",
-    day: "Wednesday",
-    date: "Feb 05",
-    time: "20:00 - 21:30",
-    capacity: { current: 28, max: null },
-    isEnrolled: false,
-    description: "Learn essential terminology for the technology sector.",
-  },
-];
+import { isClassStartingSoon, isLateCancellation } from "@/lib/utils/date-utils";
+import { useClassesStore } from "@/store/classes";
+import type { ClassSession } from "@/types/classes";
 
 export default function ClassesPage() {
   const [activeTab, setActiveTab] = useState<"available" | "booked">("available");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
+  const [willApplyStrike, setWillApplyStrike] = useState(false);
+
+  const { availableClasses, mySchedule, isLoading, fetchAvailableClasses,
+    fetchMySchedule, enrollInClass, cancelEnrollment } = useClassesStore();
+
+  useEffect(() => {
+    if (activeTab === "available") {
+      fetchAvailableClasses().catch((err) => {
+        toast.error("Error loading available classes");
+        console.error(err);
+      });
+    } else {
+      fetchMySchedule().catch((err) => {
+        toast.error("Error loading your schedule");
+        console.error(err);
+      });
+    }
+  }, [activeTab, fetchAvailableClasses, fetchMySchedule]);
 
   const handleCancelClick = (classItem: ClassSession) => {
     setSelectedClass(classItem);
+    // Verificar si es cancelación tardía
+    const isLate = isLateCancellation(classItem.day, classItem.time);
+    setWillApplyStrike(isLate);
     setShowCancelModal(true);
   };
 
-  const handleEnroll = (_classId: number) => {
-    // Implement enrollment logic
+  const handleEnroll = async (classId: number) => {
+    try {
+      const response = await enrollInClass(classId);
+      toast.success(response.message);
+      // Cambiar a tab "My Schedule"
+      setActiveTab("booked");
+    } catch (_error: unknown) {
+      const error = _error as { response?: { status?: number; data?: { message?: string } } };
+      if (error.response?.status === 403) {
+        toast.error("Your account doesn't have permission to enroll");
+      } else if (error.response?.status === 409) {
+        toast.error(error.response?.data?.message || "Already enrolled or class is full");
+      } else {
+        toast.error("Failed to enroll in class");
+      }
+    }
   };
 
-  const isClassStartingSoon = (timeString: string) => {
-    // Simulation: today's class at 18:00
-    return timeString.includes("18:00");
-  };
+  const confirmCancellation = async () => {
+    if (!selectedClass) return;
 
-  const bookedClasses = upcomingClasses.filter((c) => c.isEnrolled);
-  const availableClasses = upcomingClasses.filter((c) => !c.isEnrolled);
+    try {
+      const response = await cancelEnrollment(selectedClass.id);
+      
+      if (response.strikeApplied) {
+        toast.warning(response.message, { duration: 5000 });
+      } else {
+        toast.success(response.message);
+      }
+
+      setShowCancelModal(false);
+      setSelectedClass(null);
+    } catch {
+      toast.error("Failed to cancel enrollment");
+    }
+  };
 
   return (
     <div className="space-y-8 pb-10">
@@ -182,9 +123,9 @@ export default function ClassesPage() {
         >
           <CalendarDays className="h-4 w-4" />
           My Schedule
-          {bookedClasses.length > 0 && (
+          {mySchedule.length > 0 && (
             <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-cyan-dark text-[10px] text-white">
-              {bookedClasses.length}
+              {mySchedule.length}
             </span>
           )}
         </button>
@@ -212,9 +153,9 @@ export default function ClassesPage() {
                   </h2>
                 </div>
 
-                {bookedClasses.length > 0 ? (
+                {mySchedule.length > 0 ? (
                   <div className="space-y-4">
-                    {bookedClasses.map((classItem) => (
+                    {mySchedule.map((classItem) => (
                       <motion.div
                         key={classItem.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -269,7 +210,7 @@ export default function ClassesPage() {
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
                               {isClassStartingSoon(classItem.time) ? (
                                 <motion.a
-                                  href={classItem.meetLink}
+                                  href={classItem.meetLink ?? "#"}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   whileHover={{ scale: 1.02 }}
@@ -477,12 +418,12 @@ export default function ClassesPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
-            <div className="bg-red-50 px-6 py-4">
+            <div className={`px-6 py-4 ${willApplyStrike ? "bg-red-50" : "bg-amber-50"}`}>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${willApplyStrike ? "bg-red-100" : "bg-amber-100"}`}>
+                  <AlertCircle className={`h-5 w-5 ${willApplyStrike ? "text-red-600" : "text-amber-600"}`} />
                 </div>
-                <h3 className="font-display text-lg font-bold text-red-900">
+                <h3 className={`font-display text-lg font-bold ${willApplyStrike ? "text-red-900" : "text-amber-900"}`}>
                   Confirm Cancellation
                 </h3>
               </div>
@@ -492,16 +433,17 @@ export default function ClassesPage() {
                 Are you sure you want to cancel the class &quot;
                 {selectedClass.title}&quot;?
               </p>
-              <div className="mt-4 rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-bold text-amber-900">
-                  ⚠️ Warning: Penalty
-                </p>
-                <p className="mt-1 text-xs text-amber-800">
-                  Less than 24 hours remain before the class. By canceling,
-                  you will receive <strong>1 Strike</strong> on your account. Strikes
-                  may affect your system access.
-                </p>
-              </div>
+              {willApplyStrike && (
+                <div className="mt-4 rounded-xl border-2 border-red-200 bg-red-50 p-4">
+                  <p className="text-sm font-bold text-red-800 mb-2">
+                    ⚠️ Warning: Late Cancellation
+                  </p>
+                  <p className="text-sm text-red-700">
+                    Canceling now will generate a <strong>Strike</strong> because
+                    there are less than 24 hours until the class starts.
+                  </p>
+                </div>
+              )}
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <motion.button
                   onClick={() => setShowCancelModal(false)}
@@ -509,17 +451,20 @@ export default function ClassesPage() {
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition-all hover:bg-gray-50"
                 >
-                  No, Keep Reservation
+                  Keep Class
                 </motion.button>
                 <motion.button
-                  onClick={() => {
-                    setShowCancelModal(false);
-                  }}
+                  onClick={confirmCancellation}
+                  disabled={isLoading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-red-700"
+                  className={`flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all ${
+                    willApplyStrike
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-amber-600 hover:bg-amber-700"
+                  }`}
                 >
-                  Yes, Cancel Class
+                  {isLoading ? "Canceling..." : "Confirm Cancel"}
                 </motion.button>
               </div>
             </div>

@@ -1,16 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Cookies from "js-cookie";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 import { InputField } from "@/components/auth/FormInputs";
 import { useAuthStore } from "@/store/auth";
 
 export default function ForgotPassword() {
+  const router = useRouter();
   const { forgotPassword, isLoading } = useAuthStore();
+
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const userStatus = Cookies.get("userStatus");
+    
+    if (token && userStatus === "ACTIVE") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
   
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");

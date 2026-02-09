@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Cookies from "js-cookie";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
 
@@ -18,6 +19,16 @@ import "react-phone-number-input/style.css";
 export default function Register() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useAuthStore();
+
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const userStatus = Cookies.get("userStatus");
+    
+    if (token && userStatus === "ACTIVE") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   const [formData, setFormData] = useState({
     firstName: "",

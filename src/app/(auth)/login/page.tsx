@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Cookies from "js-cookie";
 import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { InputField, PasswordField } from "@/components/auth/FormInputs";
 import { useAuthStore } from "@/store/auth";
@@ -20,6 +21,16 @@ export default function Login() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const userStatus = Cookies.get("userStatus");
+    
+    if (token && userStatus === "ACTIVE") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
 
   const validateField = (field: string, value: string) => {
     switch (field) {
