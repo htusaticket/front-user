@@ -17,7 +17,7 @@ export interface NextClass {
   materialsLink: string | null;
 }
 
-export interface DailyChallenge {
+export interface DashboardDailyChallenge {
   id: number;
   title: string;
   completed: boolean;
@@ -42,7 +42,7 @@ export interface Notification {
 
 export interface DashboardSummary {
   nextClass: NextClass | null;
-  dailyChallenge: DailyChallenge | null;
+  dailyChallenge: DashboardDailyChallenge | null;
   continueLearning: ContinueLearning | null;
   notifications: Notification[];
 }

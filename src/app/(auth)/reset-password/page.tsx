@@ -125,7 +125,7 @@ function ResetPasswordContent() {
   // Loading state mientras valida el token
   if (isValidatingToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-white p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -141,7 +141,7 @@ function ResetPasswordContent() {
   // Token inválido o expirado
   if (!isValidToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-white p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -181,7 +181,7 @@ function ResetPasswordContent() {
   // Éxito
   if (isSuccess) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-white p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -214,7 +214,7 @@ function ResetPasswordContent() {
 
   // Formulario de reset
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-white p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -262,7 +262,7 @@ function ResetPasswordContent() {
                     setErrors({ ...errors, password: "" });
                     setError("");
                   }}
-                  className={`w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none transition-all ${
+                  className={`w-full rounded-xl border px-4 py-3 pr-12 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all ${
                     errors.password
                       ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                       : "border-gray-200 focus:border-brand-cyan-dark focus:ring-4 focus:ring-brand-cyan-dark/10"
@@ -351,7 +351,7 @@ function ResetPasswordContent() {
                     });
                     setErrors({ ...errors, confirmPassword: "" });
                   }}
-                  className={`w-full rounded-xl border px-4 py-3 pr-12 text-sm outline-none transition-all ${
+                  className={`w-full rounded-xl border px-4 py-3 pr-12 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all ${
                     errors.confirmPassword
                       ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                       : "border-gray-200 focus:border-brand-cyan-dark focus:ring-4 focus:ring-brand-cyan-dark/10"
@@ -417,7 +417,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="flex min-h-screen items-center justify-center bg-white p-4">
           <Loader2 className="h-8 w-8 animate-spin text-brand-cyan-dark" />
         </div>
       }

@@ -162,7 +162,7 @@ export function CountrySelect({ value, onChange, error }: CountrySelectProps) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar país..."
-                  className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-cyan-dark"
+                  className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-brand-cyan-dark"
                 />
               </div>
             </div>
@@ -182,7 +182,7 @@ export function CountrySelect({ value, onChange, error }: CountrySelectProps) {
                       className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
                         isSelected
                           ? "bg-brand-cyan-dark/10 text-brand-cyan-dark"
-                          : "hover:bg-gray-50"
+                          : "text-gray-900 hover:bg-gray-50"
                       }`}
                     >
                       <span className="text-lg">{getFlagEmoji(countryCode)}</span>

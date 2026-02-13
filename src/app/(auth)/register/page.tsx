@@ -250,7 +250,7 @@ export default function Register() {
             value={formData.phone}
             onChange={(value) => handleChange("phone", value || "")}
             flags={flags}
-            className={`phone-input-container w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all ${
+            className={`phone-input-container w-full rounded-xl border px-4 py-3 text-sm text-gray-900 outline-none transition-all ${
               validationErrors.phone
                 ? "border-red-400 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100"
                 : "border-gray-200 focus-within:border-brand-cyan-dark focus-within:ring-4 focus-within:ring-brand-cyan-dark/10 hover:border-brand-cyan-dark/50"

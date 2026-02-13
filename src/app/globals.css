@@ -41,12 +41,21 @@ textarea::placeholder {
 }
 
 /* React Phone Number Input Styles */
+.phone-input-container {
+  color: #111827 !important;
+}
+
 .phone-input-container .PhoneInputInput {
   background: transparent;
   border: none;
   outline: none;
   flex: 1;
   font-size: 0.875rem;
+  color: #111827 !important;
+}
+
+.phone-input-container .PhoneInputInput::placeholder {
+  color: #9ca3af !important;
 }
 
 .phone-input-container .PhoneInputCountry {

@@ -34,4 +34,6 @@ export interface ErrorResponse {
 export * from "./auth";
 export * from "./dashboard";
 export * from "./classes";
+export * from "./academy";
+export * from "./challenges";
 
