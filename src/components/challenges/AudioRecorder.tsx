@@ -45,20 +45,23 @@ export function AudioRecorder({ onRecordingComplete, disabled = false }: AudioRe
 
       {/* Recording State - Waveform Animation */}
       {isRecording && (
-        <div className="mb-4 flex items-center gap-1">
+        <div className="mb-4 flex h-6 items-center justify-center gap-1">
           {Array.from({ length: 5 }, (_, index) => {
             const barId = `waveform-bar-${index}`;
             return (
               <motion.div
                 key={barId}
                 className="w-1 rounded-full bg-red-500"
+                style={{ transformOrigin: "center" }}
                 animate={{
                   height: isPaused ? 8 : [8, 24, 8],
+                  scaleY: 1,
                 }}
                 transition={{
                   duration: 0.5,
                   repeat: isPaused ? 0 : Infinity,
                   delay: index * 0.1,
+                  ease: "easeInOut",
                 }}
               />
             );

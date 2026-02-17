@@ -8,15 +8,18 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Importante para enviar cookies
 });
 
 // Interceptor para agregar token a las peticiones
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = Cookies.get("accessToken");
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
   (error) => Promise.reject(error),
@@ -28,6 +31,16 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     // NO redirigir automáticamente - dejar que cada componente maneje su error
     // Esto evita bucles infinitos de redirección
+    
+    // Log del error para debugging
+    if (error.response?.status === 401) {
+      console.error("Error de autenticación:", {
+        url: error.config?.url,
+        status: error.response.status,
+        data: error.response.data,
+      });
+    }
+    
     return Promise.reject(error);
   },
 );
