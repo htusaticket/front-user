@@ -21,6 +21,7 @@ export interface QuizResult {
   score: number;
   status: "APPROVED" | "NEEDS_IMPROVEMENT";
   message: string;
+  correctOptions: number[];
 }
 
 // ==================== DAILY CHALLENGE ====================
@@ -47,6 +48,7 @@ export interface AudioSubmissionResult {
   fileUrl: string;
   status: "PENDING";
   message: string;
+  correctOptions: number[];
 }
 
 // ==================== HISTORY ====================
@@ -64,6 +66,26 @@ export interface ChallengeHistoryItem {
 
 export interface ChallengeHistory {
   history: ChallengeHistoryItem[];
+}
+
+// ==================== QUIZ DETAIL ====================
+
+export interface QuizDetailQuestion {
+  id: number;
+  text: string;
+  options: string[];
+  correctAnswer: number;
+  userAnswer: number;
+}
+
+export interface QuizDetail {
+  id: string;
+  challengeId: number;
+  title: string;
+  score: number | null;
+  status: SubmissionStatus;
+  submittedAt: string;
+  questions: QuizDetailQuestion[];
 }
 
 // ==================== COMBINED CHALLENGE (for UI) ====================

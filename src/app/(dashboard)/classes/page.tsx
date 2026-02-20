@@ -208,7 +208,7 @@ export default function ClassesPage() {
                             </div>
 
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                              {isClassStartingSoon(classItem.time) ? (
+                              {isClassStartingSoon(classItem.time, classItem.day) ? (
                                 <motion.a
                                   href={classItem.meetLink ?? "#"}
                                   target="_blank"
@@ -376,29 +376,52 @@ export default function ClassesPage() {
 
                         {/* Card Action */}
                         <div className="p-5 pt-0">
-                          <motion.button
-                            onClick={() => handleEnroll(classItem.id)}
-                            disabled={classItem.isFull}
-                            whileHover={
-                              !classItem.isFull ? { scale: 1.02 } : {}
-                            }
-                            whileTap={
-                              !classItem.isFull ? { scale: 0.98 } : {}
-                            }
-                            className={`w-full rounded-xl py-3 text-sm font-bold transition-all ${
-                              classItem.isFull
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          {classItem.isEnrolled ? (
+                            // Usuario ya inscrito
+                            isClassStartingSoon(classItem.time, classItem.day) ? (
+                              <motion.a
+                                href={classItem.meetLink ?? "#"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/30 transition-all hover:bg-brand-cyan"
+                              >
+                                <Video className="h-4 w-4" />
+                                {isWorkshop ? "Join Workshop" : "Join Class"}
+                              </motion.a>
+                            ) : (
+                              <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-100 py-3 text-sm font-bold text-green-700">
+                                <CheckCircle className="h-4 w-4" />
+                                Already Enrolled
+                              </div>
+                            )
+                          ) : (
+                            // Usuario no inscrito
+                            <motion.button
+                              onClick={() => handleEnroll(classItem.id)}
+                              disabled={classItem.isFull}
+                              whileHover={
+                                !classItem.isFull ? { scale: 1.02 } : {}
+                              }
+                              whileTap={
+                                !classItem.isFull ? { scale: 0.98 } : {}
+                              }
+                              className={`w-full rounded-xl py-3 text-sm font-bold transition-all ${
+                                classItem.isFull
+                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                  : isWorkshop
+                                    ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90 hover:shadow-brand-primary/30"
+                                    : "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90"
+                              }`}
+                            >
+                              {classItem.isFull
+                                ? "Full"
                                 : isWorkshop
-                                  ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90 hover:shadow-brand-primary/30"
-                                  : "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90"
-                            }`}
-                          >
-                            {classItem.isFull
-                              ? "Full"
-                              : isWorkshop
-                                ? "Join Workshop"
-                                : "Book Class"}
-                          </motion.button>
+                                  ? "Join Workshop"
+                                  : "Book Class"}
+                            </motion.button>
+                          )}
                         </div>
                       </motion.div>
                     );

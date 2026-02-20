@@ -1,8 +1,14 @@
 /**
  * Verifica si una clase está por comenzar (disponible para unirse)
  * El link de Join está disponible 10 minutos antes y hasta 1 hora después
+ * Solo aplica para clases de HOY
  */
-export function isClassStartingSoon(timeString: string): boolean {
+export function isClassStartingSoon(timeString: string, dayString?: string): boolean {
+  // Solo mostrar "Join" para clases de hoy
+  if (dayString && dayString !== "Today") {
+    return false;
+  }
+
   // El timeString viene en formato "18:00 - 19:00" del backend
   // Necesitamos extraer solo la hora de inicio
   const startTimeStr = timeString.split(" - ")[0];

@@ -9,7 +9,7 @@ interface QuizQuestionProps {
   question: QuizQuestionType;
   questionNumber: number;
   selectedOption: number | undefined;
-  onSelectOption: (optionIndex: number) => void;
+  onSelectOption?: (optionIndex: number) => void;
   showResult?: boolean;
   correctOption?: number;
   disabled?: boolean;
@@ -72,7 +72,7 @@ export function QuizQuestion({
                 name={`question-${question.id}`}
                 className="h-4 w-4 text-brand-cyan-dark focus:ring-brand-cyan-dark"
                 checked={isSelected}
-                onChange={() => !disabled && onSelectOption(optionIndex)}
+                onChange={() => !disabled && onSelectOption?.(optionIndex)}
                 disabled={disabled}
               />
               <span className="flex-1 text-sm text-gray-700">{option}</span>

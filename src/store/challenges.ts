@@ -7,6 +7,7 @@ import type {
   QuizResult,
   AudioSubmissionResult,
   ChallengeHistoryItem,
+  QuizDetail,
 } from "@/types/challenges";
 
 interface ChallengesState {
@@ -18,6 +19,10 @@ interface ChallengesState {
   quizAnswers: Map<number, number>; // questionId -> selectedOptionIndex
   quizResult: QuizResult | null;
   isSubmittingQuiz: boolean;
+  
+  // Quiz detail (for history)
+  quizDetail: QuizDetail | null;
+  isLoadingQuizDetail: boolean;
   
   // Audio state
   isSubmittingAudio: boolean;
@@ -41,6 +46,10 @@ interface ChallengesActions {
   resetQuiz: () => void;
   clearQuizResult: () => void;
   
+  // Quiz detail (for history)
+  fetchQuizDetail: (progressId: string) => Promise<QuizDetail | null>;
+  clearQuizDetail: () => void;
+  
   // Audio actions
   submitAudio: (challengeId: number, audioBlob: Blob) => Promise<AudioSubmissionResult>;
   
@@ -60,6 +69,8 @@ const initialState: ChallengesState = {
   quizAnswers: new Map(),
   quizResult: null,
   isSubmittingQuiz: false,
+  quizDetail: null,
+  isLoadingQuizDetail: false,
   isSubmittingAudio: false,
   audioSubmissionResult: null,
   history: [],
@@ -148,6 +159,25 @@ export const useChallengesStore = create<ChallengesStore>((set, get) => ({
 
   clearQuizResult: () => {
     set({ quizResult: null });
+  },
+
+  fetchQuizDetail: async (progressId: string) => {
+    set({ isLoadingQuizDetail: true, error: null });
+    
+    try {
+      const response = await api.get(`/api/challenges/quiz/${progressId}`);
+      const detail: QuizDetail = response.data.data || response.data;
+      set({ quizDetail: detail, isLoadingQuizDetail: false });
+      return detail;
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      set({ error: errorMessage, isLoadingQuizDetail: false });
+      return null;
+    }
+  },
+
+  clearQuizDetail: () => {
+    set({ quizDetail: null });
   },
 
   submitAudio: async (challengeId: number, audioBlob: Blob) => {

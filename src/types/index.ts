@@ -36,4 +36,5 @@ export * from "./dashboard";
 export * from "./classes";
 export * from "./academy";
 export * from "./challenges";
-
+export * from "./jobs";
+export * from "./profile";

@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, AlertCircle, RefreshCw, Inbox } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { HistoryCard } from "@/components/challenges";
+import { HistoryCard, QuizDetailModal } from "@/components/challenges";
 import { Skeleton } from "@/components/ui";
 import { useChallengesStore } from "@/store/challenges";
 
@@ -16,11 +16,27 @@ export default function ChallengesHistoryPage() {
     error,
     fetchHistory,
     clearError,
+    quizDetail,
+    isLoadingQuizDetail,
+    fetchQuizDetail,
+    clearQuizDetail,
   } = useChallengesStore();
+
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
 
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  const handleViewQuizDetail = async (progressId: string) => {
+    setIsQuizModalOpen(true);
+    await fetchQuizDetail(progressId);
+  };
+
+  const handleCloseQuizModal = () => {
+    setIsQuizModalOpen(false);
+    clearQuizDetail();
+  };
 
   // Loading state
   if (isLoadingHistory && history.length === 0) {
@@ -201,9 +217,22 @@ export default function ChallengesHistoryPage() {
       {/* History List */}
       <div className="space-y-4">
         {history.map((item, index) => (
-          <HistoryCard key={item.id} item={item} index={index} />
+          <HistoryCard 
+            key={item.id} 
+            item={item} 
+            index={index}
+            onViewQuizDetail={handleViewQuizDetail}
+          />
         ))}
       </div>
+
+      {/* Quiz Detail Modal */}
+      <QuizDetailModal
+        isOpen={isQuizModalOpen}
+        onClose={handleCloseQuizModal}
+        quizDetail={quizDetail}
+        isLoading={isLoadingQuizDetail}
+      />
     </div>
   );
 }

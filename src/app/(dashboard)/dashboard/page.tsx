@@ -142,7 +142,7 @@ export default function DashboardPage() {
 
                 <div className="mt-auto pt-4 sm:pt-6">
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    {isClassStartingSoon(data.nextClass.time) ? (
+                    {isClassStartingSoon(data.nextClass.time, data.nextClass.day) ? (
                       <motion.a
                         href={data.nextClass.meetLink || "#"}
                         target="_blank"
@@ -329,7 +329,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <Link
-                  href={`/academy/modules/${data.continueLearning.moduleId}/lessons/${data.continueLearning.lessonId}`}
+                  href={`/academy/${data.continueLearning.moduleId}/${data.continueLearning.lessonId}`}
                   className="mt-6"
                 >
                   <motion.button

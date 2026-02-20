@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mic, FileQuestion, CheckCircle, XCircle, Clock, MessageSquare } from "lucide-react";
+import { Mic, FileQuestion, CheckCircle, XCircle, Clock, MessageSquare, Eye } from "lucide-react";
 
 import { StatusBadge } from "@/components/ui";
 import type { ChallengeHistoryItem } from "@/types/challenges";
@@ -9,10 +9,12 @@ import type { ChallengeHistoryItem } from "@/types/challenges";
 interface HistoryCardProps {
   item: ChallengeHistoryItem;
   index?: number;
+  onViewQuizDetail?: (progressId: string) => void;
 }
 
-export function HistoryCard({ item, index = 0 }: HistoryCardProps) {
+export function HistoryCard({ item, index = 0, onViewQuizDetail }: HistoryCardProps) {
   const isAudio = item.type === "AUDIO";
+  const isQuiz = item.type === "MULTIPLE_CHOICE";
   const isApproved = item.status === "APPROVED";
   const needsImprovement = item.status === "NEEDS_IMPROVEMENT";
 
@@ -83,13 +85,24 @@ export function HistoryCard({ item, index = 0 }: HistoryCardProps) {
 
         {/* Score for Quiz */}
         {!isAudio && item.score !== null && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-gray-50 p-3">
-            <span className="text-sm font-medium text-gray-600">Score:</span>
-            <span className={`text-lg font-bold ${
-              item.score >= 70 ? "text-green-600" : "text-orange-600"
-            }`}>
-              {item.score}%
-            </span>
+          <div className="mb-4 flex items-center justify-between rounded-lg bg-gray-50 p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600">Score:</span>
+              <span className={`text-lg font-bold ${
+                item.score >= 70 ? "text-green-600" : "text-orange-600"
+              }`}>
+                {item.score}%
+              </span>
+            </div>
+            {isQuiz && onViewQuizDetail && (
+              <button
+                onClick={() => onViewQuizDetail(item.id)}
+                className="flex items-center gap-1 rounded-lg bg-brand-cyan-dark/10 px-3 py-1.5 text-xs font-semibold text-brand-cyan-dark transition-colors hover:bg-brand-cyan-dark/20"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                View Answers
+              </button>
+            )}
           </div>
         )}
 

@@ -176,7 +176,9 @@ export default function ChallengesPage() {
             {/* Show quiz results if available */}
             {quizResult && isQuizChallenge(dailyChallenge) ? (
               <QuizResults 
-                result={quizResult} 
+                result={quizResult}
+                questions={dailyChallenge.questions}
+                userAnswers={quizAnswers}
                 onRetry={handleRetryQuiz} 
                 onDismiss={clearQuizResult}
               />
