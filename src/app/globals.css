@@ -39,3 +39,50 @@ textarea::placeholder {
   color: #9ca3af;
   opacity: 1;
 }
+
+/* React Phone Number Input Styles */
+.phone-input-container {
+  color: #111827 !important;
+}
+
+.phone-input-container .PhoneInputInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 0.875rem;
+  color: #111827 !important;
+}
+
+.phone-input-container .PhoneInputInput::placeholder {
+  color: #9ca3af !important;
+}
+
+.phone-input-container .PhoneInputCountry {
+  margin-right: 0.5rem;
+}
+
+.phone-input-container .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.phone-input-container .PhoneInputCountrySelectArrow {
+  margin-left: 0.25rem;
+  opacity: 0.5;
+}
+
+.phone-input-container .PhoneInputCountrySelect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+

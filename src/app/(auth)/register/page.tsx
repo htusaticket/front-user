@@ -1,19 +1,38 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2 } from "lucide-react";
+import Cookies from "js-cookie";
+import { AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
 
+import { CountrySelect } from "@/components/auth/CountrySelect";
 import { InputField, PasswordField } from "@/components/auth/FormInputs";
+import { useAuthStore } from "@/store/auth";
+
+import "react-phone-number-input/style.css";
 
 export default function Register() {
   const router = useRouter();
+  const { register, isLoading, error, clearError } = useAuthStore();
+
+  // Verificar si ya está autenticado
+  useEffect(() => {
+    const token = Cookies.get("accessToken");
+    const userStatus = Cookies.get("userStatus");
+    
+    if (token && userStatus === "ACTIVE") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
   const [formData, setFormData] = useState({
-    name: "",
-    lastname: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     city: "",
@@ -24,18 +43,19 @@ export default function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const validateField = (field: string, value: string) => {
     switch (field) {
-    case "name":
+    case "firstName":
       if (!value) return "El nombre es requerido";
       if (value.length < 2) return "Mínimo 2 caracteres";
+      if (value.length > 50) return "Máximo 50 caracteres";
       return "";
-    case "lastname":
+    case "lastName":
       if (!value) return "El apellido es requerido";
       if (value.length < 2) return "Mínimo 2 caracteres";
+      if (value.length > 50) return "Máximo 50 caracteres";
       return "";
     case "email": {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,10 +65,11 @@ export default function Register() {
     }
     case "phone":
       if (!value) return "El teléfono es requerido";
-      if (value.length < 8) return "Número inválido";
+      if (!isValidPhoneNumber(value)) return "Número de teléfono inválido";
       return "";
     case "city":
       if (!value) return "La ciudad es requerida";
+      if (value.length > 100) return "Máximo 100 caracteres";
       return "";
     case "country":
       if (!value) return "El país es requerido";
@@ -57,6 +78,7 @@ export default function Register() {
       if (!value) return "La contraseña es requerida";
       if (value.length < 8) return "Mínimo 8 caracteres";
       if (!/[A-Z]/.test(value)) return "Al menos una mayúscula";
+      if (!/[a-z]/.test(value)) return "Al menos una minúscula";
       if (!/[0-9]/.test(value)) return "Al menos un número";
       return "";
     case "confirmPassword":
@@ -73,18 +95,18 @@ export default function Register() {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    const error = validateField(field, value);
-    setErrors((prev) => ({ ...prev, [field]: error }));
+    const validationError = validateField(field, value);
+    setValidationErrors((prev) => ({ ...prev, [field]: validationError }));
 
     if (field === "password" && formData.confirmPassword) {
-      setErrors((prev) => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        confirmPassword: validateField(
-          "confirmPassword",
-          formData.confirmPassword,
-        ),
+        confirmPassword: validateField("confirmPassword", formData.confirmPassword),
       }));
     }
+
+    // Limpiar error del servidor al escribir
+    if (error) clearError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,19 +114,31 @@ export default function Register() {
 
     const newErrors: Record<string, string> = {};
     Object.keys(formData).forEach((key) => {
-      const error = validateField(key, formData[key as keyof typeof formData]);
-      if (error) newErrors[key] = error;
+      const validationError = validateField(key, formData[key as keyof typeof formData]);
+      if (validationError) newErrors[key] = validationError;
     });
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      setValidationErrors(newErrors);
       return;
     }
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    router.push("/auth/pending");
+    const result = await register({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      city: formData.city,
+      country: formData.country,
+      reference: formData.reference || undefined,
+      password: formData.password,
+    });
+
+    if (result.success) {
+      // Registro exitoso - redirigir a pending
+      router.push("/pending");
+    }
+    // Si hay error, se muestra automáticamente desde el store
   };
 
   const getPasswordStrength = () => {
@@ -159,22 +193,34 @@ export default function Register() {
         </p>
       </div>
 
+      {/* Error del servidor */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <InputField
-            id="name"
+            id="firstName"
             label="Nombre"
-            value={formData.name}
-            onChange={(v) => handleChange("name", v)}
-            error={errors.name}
+            value={formData.firstName}
+            onChange={(v) => handleChange("firstName", v)}
+            error={validationErrors.firstName}
             placeholder="Juan"
           />
           <InputField
-            id="lastname"
+            id="lastName"
             label="Apellido"
-            value={formData.lastname}
-            onChange={(v) => handleChange("lastname", v)}
-            error={errors.lastname}
+            value={formData.lastName}
+            onChange={(v) => handleChange("lastName", v)}
+            error={validationErrors.lastName}
             placeholder="Pérez"
           />
         </div>
@@ -185,19 +231,37 @@ export default function Register() {
           type="email"
           value={formData.email}
           onChange={(v) => handleChange("email", v)}
-          error={errors.email}
+          error={validationErrors.email}
           placeholder="tu@email.com"
         />
 
-        <InputField
-          id="phone"
-          label="Teléfono (WhatsApp)"
-          type="tel"
-          value={formData.phone}
-          onChange={(v) => handleChange("phone", v)}
-          error={errors.phone}
-          placeholder="+54 9 11 ..."
-        />
+        {/* Teléfono Internacional */}
+        <div className="flex flex-col">
+          <label
+            htmlFor="phone"
+            className="mb-1.5 font-display text-sm font-bold text-gray-700"
+          >
+            Teléfono (WhatsApp)
+          </label>
+          <PhoneInput
+            international
+            countryCallingCodeEditable={false}
+            defaultCountry="AR"
+            value={formData.phone}
+            onChange={(value) => handleChange("phone", value || "")}
+            flags={flags}
+            className={`phone-input-container w-full rounded-xl border px-4 py-3 text-sm text-gray-900 outline-none transition-all ${
+              validationErrors.phone
+                ? "border-red-400 focus-within:border-red-500 focus-within:ring-4 focus-within:ring-red-100"
+                : "border-gray-200 focus-within:border-brand-cyan-dark focus-within:ring-4 focus-within:ring-brand-cyan-dark/10 hover:border-brand-cyan-dark/50"
+            } bg-gray-50/50`}
+          />
+          {validationErrors.phone && (
+            <p className="mt-1 text-xs font-medium text-red-500">
+              {validationErrors.phone}
+            </p>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <InputField
@@ -205,46 +269,16 @@ export default function Register() {
             label="Ciudad"
             value={formData.city}
             onChange={(v) => handleChange("city", v)}
-            error={errors.city}
+            error={validationErrors.city}
             placeholder="Buenos Aires"
           />
-          <div className="flex flex-col">
-            <label
-              htmlFor="country"
-              className="mb-1.5 font-display text-sm font-bold text-gray-700"
-            >
-              País
-            </label>
-            <div className="relative">
-              <input
-                id="country"
-                list="countries"
-                value={formData.country}
-                onChange={(e) => handleChange("country", e.target.value)}
-                className={`w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all placeholder:text-gray-400 ${
-                  errors.country
-                    ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                    : "border-gray-200 focus:border-brand-cyan-dark focus:ring-4 focus:ring-brand-cyan-dark/10 hover:border-brand-cyan-dark/50"
-                } bg-gray-50/50`}
-                placeholder="Selecciona o escribe..."
-              />
-              <datalist id="countries">
-                <option value="Argentina" />
-                <option value="Chile" />
-                <option value="Colombia" />
-                <option value="México" />
-                <option value="Perú" />
-                <option value="España" />
-                <option value="Estados Unidos" />
-                <option value="Uruguay" />
-              </datalist>
-            </div>
-            {errors.country && (
-              <p className="mt-1 text-xs font-medium text-red-500">
-                {errors.country}
-              </p>
-            )}
-          </div>
+          
+          {/* País con banderas */}
+          <CountrySelect
+            value={formData.country}
+            onChange={(v) => handleChange("country", v)}
+            error={validationErrors.country}
+          />
         </div>
 
         <div className="flex flex-col">
@@ -259,7 +293,7 @@ export default function Register() {
             value={formData.reference}
             onChange={(e) => handleChange("reference", e.target.value)}
             className={`w-full appearance-none rounded-xl border px-4 py-3 text-sm outline-none transition-all ${
-              errors.reference
+              validationErrors.reference
                 ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                 : "border-gray-200 focus:border-brand-cyan-dark focus:ring-4 focus:ring-brand-cyan-dark/10 hover:border-brand-cyan-dark/50"
             } bg-gray-50/50 ${
@@ -276,9 +310,9 @@ export default function Register() {
             <option value="friend">Recomendación de amigo</option>
             <option value="other">Otro</option>
           </select>
-          {errors.reference && (
+          {validationErrors.reference && (
             <p className="mt-1 text-xs font-medium text-red-500">
-              {errors.reference}
+              {validationErrors.reference}
             </p>
           )}
         </div>
@@ -291,14 +325,14 @@ export default function Register() {
             onChange={(v) => handleChange("password", v)}
             show={showPassword}
             onToggle={() => setShowPassword(!showPassword)}
-            error={errors.password}
+            error={validationErrors.password}
           />
           {formData.password && passwordStrength.strength > 0 && (
             <div className="mt-1">
               <div className="flex h-1 gap-1">
-                {[...Array(4)].map((_, i) => (
+                {Array.from({ length: 4 }, (_, i) => (
                   <div
-                    key={`strength-bar-${i}`}
+                    key={`strength-${passwordStrength.strength}-${i}`}
                     className={`flex-1 rounded-full transition-all duration-300 ${
                       i < passwordStrength.strength
                         ? passwordStrength.color
@@ -320,14 +354,14 @@ export default function Register() {
             onChange={(v) => handleChange("confirmPassword", v)}
             show={showConfirmPassword}
             onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-            error={errors.confirmPassword}
+            error={validationErrors.confirmPassword}
           />
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="group relative mt-6 flex w-full items-center justify-center overflow-hidden rounded-xl bg-brand-cyan-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:-translate-y-0.5 hover:bg-[#2eaa c2] hover:shadow-xl hover:shadow-brand-cyan-dark/30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:opacity-70"
+          className="group relative mt-6 flex w-full items-center justify-center overflow-hidden rounded-xl bg-brand-cyan-dark py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:-translate-y-0.5 hover:bg-[#2eaac2] hover:shadow-xl hover:shadow-brand-cyan-dark/30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:opacity-70"
         >
           <div className="relative flex items-center gap-2">
             {isLoading ? (
@@ -357,4 +391,3 @@ export default function Register() {
     </motion.div>
   );
 }
-

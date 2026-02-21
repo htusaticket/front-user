@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useState } from "react";
+
+import { useAuthStore } from "@/store/auth";
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
@@ -47,9 +49,11 @@ export const SidebarProvider = ({ children }: { children: React.ReactNode }) => 
 const SidebarContent = ({
   pathname,
   onClose,
+  onLogout,
 }: {
   pathname: string;
   onClose?: () => void;
+  onLogout: () => void;
 }) => (
   <div className="flex h-full flex-col p-6">
     {/* Logo */}
@@ -121,7 +125,10 @@ const SidebarContent = ({
 
     {/* Logout */}
     <div className="border-t border-gray-200 pt-4">
-      <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50">
+      <button 
+        onClick={onLogout}
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50"
+      >
         <LogOut className="h-5 w-5" />
         Sign Out
       </button>
@@ -131,13 +138,20 @@ const SidebarContent = ({
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, setIsOpen } = useSidebar();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-gray-200 bg-white lg:flex">
-        <SidebarContent pathname={pathname} />
+        <SidebarContent pathname={pathname} onLogout={handleLogout} />
       </aside>
 
       {/* Mobile Sidebar */}
@@ -160,7 +174,7 @@ export const Sidebar = () => {
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed left-0 top-0 z-50 h-screen w-64 border-r border-gray-200 bg-white lg:hidden"
             >
-              <SidebarContent pathname={pathname} onClose={() => setIsOpen(false)} />
+              <SidebarContent pathname={pathname} onClose={() => setIsOpen(false)} onLogout={handleLogout} />
             </motion.aside>
           </>
         )}

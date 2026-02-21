@@ -29,3 +29,12 @@ export interface ErrorResponse {
   statusCode: number;
   details?: Record<string, unknown>;
 }
+
+// Re-export from other type files
+export * from "./auth";
+export * from "./dashboard";
+export * from "./classes";
+export * from "./academy";
+export * from "./challenges";
+export * from "./jobs";
+export * from "./profile";
