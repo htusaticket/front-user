@@ -16,7 +16,10 @@ const typeConfig: Record<string, { icon: React.ElementType; bgColor: string; ico
 };
 
 export function ResourcesList({ resources }: ResourcesListProps) {
-  if (!resources || resources.length === 0) {
+  // Filter out videos (they are shown in MultiVideoPlayer)
+  const nonVideoResources = resources?.filter(r => r.type !== "VIDEO") || [];
+  
+  if (nonVideoResources.length === 0) {
     return null;
   }
 
@@ -46,7 +49,7 @@ export function ResourcesList({ resources }: ResourcesListProps) {
         </h2>
       </div>
       <div className="space-y-3">
-        {resources.map((resource) => {
+        {nonVideoResources.map((resource) => {
           const config = typeConfig[resource.type] || typeConfig.DOCUMENT;
           const Icon = config.icon;
 

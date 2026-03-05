@@ -22,6 +22,8 @@ interface ProfileState {
   subscription: SubscriptionInfo | null;
   stats: ProfileStats;
   strikes: StrikeInfo;
+  isPunished: boolean;
+  punishedUntil: string | null;
   isLoading: boolean;
   isSaving: boolean;
   error: string | null;
@@ -48,6 +50,8 @@ const initialProfileState: ProfileState = {
     maxStrikes: 3,
     resetDate: null,
   },
+  isPunished: false,
+  punishedUntil: null,
   isLoading: false,
   isSaving: false,
   error: null,
@@ -68,6 +72,8 @@ export const useProfileStore = create<ProfileStore>((set) => ({
         subscription: data.subscription,
         stats: data.stats,
         strikes: data.strikes,
+        isPunished: data.isPunished,
+        punishedUntil: data.punishedUntil,
         isLoading: false,
       });
     } catch (error) {

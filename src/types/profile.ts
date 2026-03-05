@@ -16,8 +16,11 @@ export interface UserProfile {
 }
 
 export interface SubscriptionInfo {
-  plan: string;
+  plan: string | null;
   memberSince: string;
+  hasActiveSubscription: boolean;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 export interface ProfileStats {
@@ -37,6 +40,8 @@ export interface ProfileResponse {
   subscription: SubscriptionInfo;
   stats: ProfileStats;
   strikes: StrikeInfo;
+  isPunished: boolean;
+  punishedUntil: string | null;
 }
 
 export interface UpdateProfileRequest {

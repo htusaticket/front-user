@@ -7,8 +7,10 @@ import { useEffect, useState, useRef } from "react";
 
 import { Header } from "@/components/layout/Header";
 import { Sidebar, SidebarProvider } from "@/components/layout/Sidebar";
+import { NoSubscriptionOverlay } from "@/components/shared/NoSubscriptionOverlay";
 import { getErrorCode } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import { useProfileStore } from "@/store/profile";
 
 export default function DashboardLayout({
   children,
@@ -17,7 +19,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const fetchUser = useAuthStore((state) => state.fetchUser);
+  const user = useAuthStore((state) => state.user);
   const _isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const hasVerified = useRef(false);
@@ -39,6 +43,8 @@ export default function DashboardLayout({
     const verifyAuth = async () => {
       try {
         await fetchUser();
+        // También cargamos el perfil para tener la info de suscripción
+        await fetchProfile();
         setIsLoading(false);
       } catch (error) {
         setHasError(true);
@@ -97,6 +103,7 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      <NoSubscriptionOverlay />
     </SidebarProvider>
   );
 }
