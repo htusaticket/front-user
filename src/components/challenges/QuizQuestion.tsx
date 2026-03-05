@@ -60,11 +60,10 @@ export function QuizQuestion({
           const isSelected = selectedOption === optionIndex;
           const isCorrect = correctOption === optionIndex;
           const wasWrong = showResult && isSelected && !isCorrect;
-          const optionId = `${question.id}-${option}-${optionIndex}`;
 
           return (
             <label
-              key={optionId}
+              key={`q${question.id}-opt${optionIndex}`}
               className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${getOptionStyle(optionIndex)} ${disabled ? "cursor-not-allowed" : ""}`}
             >
               <input

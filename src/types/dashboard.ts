@@ -37,6 +37,8 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
+  isRead: boolean;
+  data?: Record<string, unknown> | null;
   createdAt: string; // ISO DateTime
 }
 

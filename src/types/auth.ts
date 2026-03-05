@@ -9,6 +9,8 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
+export type UserPlan = "PRO" | "ELITE" | "LEVEL_UP" | "HIRING_HUB" | "SKILL_BUILDER";
+
 export interface User {
   id: string;
   email: string;
@@ -21,6 +23,8 @@ export interface User {
   avatar?: string;
   role: UserRole;
   status: UserStatus;
+  isPunished: boolean;
+  punishedUntil: string | null;
   createdAt: string;
 }
 
@@ -74,6 +78,7 @@ export interface ResetPasswordResponse {
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
   | "ACCOUNT_PENDING"
+  | "ACCOUNT_INACTIVE"
   | "ACCOUNT_SUSPENDED"
   | "EMAIL_ALREADY_EXISTS"
   | "INVALID_TOKEN"
