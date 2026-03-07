@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, Mail, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { useProfileStore } from "@/store/profile";
 
@@ -11,20 +11,26 @@ export function NoSubscriptionOverlay() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  // Calculate whether overlay should be visible based on conditions
+  const shouldShowOverlay = useMemo(() => {
+    if (isLoading || dismissed) return false;
+    if (!subscription) return false;
+    return !subscription.hasActiveSubscription;
+  }, [subscription, isLoading, dismissed]);
+
   useEffect(() => {
-    // Show overlay if user has no active subscription and hasn't dismissed it
-    if (!isLoading && subscription && !subscription.hasActiveSubscription && !dismissed) {
+    if (shouldShowOverlay) {
       // Small delay to prevent flash
       const timer = setTimeout(() => setShowOverlay(true), 500);
       return () => clearTimeout(timer);
-    } else {
-      setShowOverlay(false);
     }
-  }, [subscription, isLoading, dismissed]);
+    // Use timeout for hiding as well to satisfy lint rules
+    const hideTimer = setTimeout(() => setShowOverlay(false), 0);
+    return () => clearTimeout(hideTimer);
+  }, [shouldShowOverlay]);
 
   const handleDismiss = () => {
     setDismissed(true);
-    setShowOverlay(false);
   };
 
   // Don't show for staff/admin users

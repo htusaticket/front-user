@@ -22,8 +22,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationsStore } from "@/store/notifications";
 import { useProfileStore } from "@/store/profile";
-import type { Notification } from "@/types/dashboard";
 import type { UserPlan } from "@/types/auth";
+import type { Notification } from "@/types/dashboard";
 
 import { useSidebar } from "./Sidebar";
 
@@ -48,17 +48,17 @@ const getPageTitle = (pathname: string): string => {
 
 // Format plan for display
 const getPlanLabel = (plan: UserPlan | null | undefined): string => {
-  if (!plan) return "Student";
+  if (!plan) return "";
   
   const labels: Record<UserPlan, string> = {
-    PRO: "Pro Student",
-    ELITE: "Elite Student",
-    LEVEL_UP: "Level Up Student",
+    PRO: "PRO",
+    ELITE: "Elite",
+    LEVEL_UP: "Level Up",
     HIRING_HUB: "Hiring Hub",
     SKILL_BUILDER: "Skill Builder",
   };
   
-  return labels[plan] || "Student";
+  return labels[plan] || "";
 };
 
 // Helper to get notification icon based on type

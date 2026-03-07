@@ -158,14 +158,14 @@ type ApplicationsStore = ApplicationsState & ApplicationsActions;
 const initialApplicationsState: ApplicationsState = {
   applications: {
     applied: [],
+    pending: [],
     interview: [],
-    offer: [],
     rejected: [],
   },
   stats: {
     applied: 0,
+    pending: 0,
     interview: 0,
-    offer: 0,
     rejected: 0,
   },
   isLoading: false,
@@ -269,7 +269,7 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
         const newApplications = { ...state.applications };
         
         // Find and update the application in all columns
-        const columns: (keyof ApplicationsByStatus)[] = ["applied", "interview", "offer", "rejected"];
+        const columns: (keyof ApplicationsByStatus)[] = ["applied", "pending", "interview", "rejected"];
         
         for (const column of columns) {
           const index = newApplications[column].findIndex((app) => app.id === applicationId);
