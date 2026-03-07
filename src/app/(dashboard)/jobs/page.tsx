@@ -8,17 +8,19 @@ import {
   Building,
   Filter,
   Search,
-  ExternalLink,
   CheckCircle,
   Loader2,
   X,
   ChevronDown,
   ArrowUpDown,
+  Lock,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
 
 import { useJobsStore } from "@/store/jobs";
+import { useProfileStore } from "@/store/profile";
 import type { JobOffer, JobSortBy } from "@/types/jobs";
 
 const SORT_OPTIONS: { value: JobSortBy; label: string }[] = [
@@ -45,10 +47,20 @@ export default function JobsPage() {
     resetFilters,
   } = useJobsStore();
 
+  const { planFeatures, isLoading: isProfileLoading, fetchProfile } = useProfileStore();
+
   const [searchInput, setSearchInput] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+
+  // Check if user has access to job board
+  const hasJobAccess = planFeatures.jobBoard;
+
+  // Fetch profile to get plan features
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   // Fetch jobs on mount and when filters change
   useEffect(() => {
@@ -102,6 +114,121 @@ export default function JobsPage() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-brand-cyan-dark" />
+      </div>
+    );
+  }
+
+  // Show locked view for users without job board access
+  if (!hasJobAccess && !isProfileLoading) {
+    return (
+      <div className="relative min-h-[600px]">
+        {/* Blurred background content */}
+        <div className="pointer-events-none select-none blur-md">
+          <div className="space-y-8">
+            {/* Header */}
+            <div>
+              <h1 className="font-display text-3xl font-bold text-brand-primary">
+                Job Opportunities
+              </h1>
+              <p className="mt-2 text-lg text-gray-600">
+                Find job offers where you can use your English skills
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Available Offers</p>
+                    <p className="mt-1 font-display text-3xl font-bold text-brand-primary">24</p>
+                  </div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-cyan-dark/10">
+                    <Briefcase className="h-7 w-7 text-brand-cyan-dark" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Active Applications</p>
+                    <p className="mt-1 font-display text-3xl font-bold text-brand-primary">5</p>
+                  </div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-100">
+                    <CheckCircle className="h-7 w-7 text-green-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">New This Week</p>
+                    <p className="mt-1 font-display text-3xl font-bold text-brand-primary">8</p>
+                  </div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-purple-100">
+                    <Building className="h-7 w-7 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Placeholder job cards */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Sales Representative</h3>
+                      <p className="text-sm text-gray-500">Tech Company Inc.</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs text-gray-600">Remote</span>
+                    <span className="rounded-lg bg-green-100 px-3 py-1 text-xs text-green-700">$50K-80K</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Overlay with upgrade message */}
+        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mx-4 max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-2xl"
+          >
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-cyan-dark to-brand-cyan">
+              <Lock className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Upgrade Your Plan
+            </h2>
+            <p className="mt-3 text-gray-600">
+              Job Board is available for <strong>PRO</strong>, <strong>ELITE</strong>,{" "}
+              <strong>LEVEL UP</strong>, and <strong>HIRING HUB</strong> plans.
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Upgrade your subscription to access exclusive job opportunities and start applying today.
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <a
+                href="mailto:support@highticketenglish.com?subject=Plan Upgrade Request"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-6 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-brand-cyan-dark/30"
+              >
+                <Crown className="h-5 w-5" />
+                Contact to Upgrade
+              </a>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-gray-500 hover:text-brand-cyan-dark"
+              >
+                Return to Dashboard
+              </Link>
+            </div>
+          </motion.div>
+        </div>
       </div>
     );
   }
@@ -487,11 +614,11 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
         )}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex">
         {job.hasApplied ? (
           <button
             disabled
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-200 px-6 py-3 text-sm font-bold text-gray-500"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-200 px-6 py-3 text-sm font-bold text-gray-500"
           >
             <CheckCircle className="h-4 w-4" />
             Applied
@@ -502,7 +629,7 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             disabled={isApplying}
             whileHover={{ scale: isApplying ? 1 : 1.02 }}
             whileTap={{ scale: isApplying ? 1 : 0.98 }}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:bg-brand-cyan disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:bg-brand-cyan disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isApplying ? (
               <>
@@ -514,14 +641,6 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             )}
           </motion.button>
         )}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-6 py-3 text-sm font-bold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
-        >
-          <ExternalLink className="h-4 w-4" />
-          View More
-        </motion.button>
       </div>
     </motion.div>
   );

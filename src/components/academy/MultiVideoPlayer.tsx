@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { PlayCircle, Check } from "lucide-react";
+import { useState } from "react";
 
 import type { LessonResource } from "@/types/academy";
+
 import { VideoPlayer } from "./VideoPlayer";
 
 interface MultiVideoPlayerProps {
@@ -15,7 +16,7 @@ interface MultiVideoPlayerProps {
 export function MultiVideoPlayer({ 
   mainVideoUrl, 
   mainVideoTitle,
-  additionalVideos = [] 
+  additionalVideos = [],
 }: MultiVideoPlayerProps) {
   // Filter only video resources
   const videoResources = additionalVideos.filter(r => r.type === "VIDEO");
@@ -23,7 +24,7 @@ export function MultiVideoPlayer({
   // All videos including main
   const allVideos = [
     { id: 0, title: mainVideoTitle, url: mainVideoUrl },
-    ...videoResources.map(v => ({ id: v.id, title: v.title, url: v.fileUrl }))
+    ...videoResources.map(v => ({ id: v.id, title: v.title, url: v.fileUrl })),
   ];
 
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -85,8 +86,8 @@ export function MultiVideoPlayer({
                     isActive
                       ? "bg-white/20 text-white"
                       : isWatched
-                      ? "bg-green-100 text-green-600"
-                      : "bg-gray-200 text-gray-600"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-200 text-gray-600"
                   }`}
                 >
                   {isWatched && !isActive ? (

@@ -3,12 +3,14 @@ import { create } from "zustand";
 
 import api, { getErrorMessage } from "@/lib/api";
 import type {
+  PlanFeatures,
   ProfileFormData,
   ProfileFormErrors,
   ProfileResponse,
   ProfileStats,
   StrikeInfo,
   SubscriptionInfo,
+  SystemSettings,
   UpdateProfileRequest,
   UserProfile,
 } from "@/types/profile";
@@ -24,6 +26,8 @@ interface ProfileState {
   strikes: StrikeInfo;
   isPunished: boolean;
   punishedUntil: string | null;
+  planFeatures: PlanFeatures;
+  systemSettings: SystemSettings;
   isLoading: boolean;
   isSaving: boolean;
   error: string | null;
@@ -42,7 +46,7 @@ const initialProfileState: ProfileState = {
   subscription: null,
   stats: {
     completedClasses: 0,
-    completedLessons: 0,
+    jobApplications: 0,
     completedChallenges: 0,
   },
   strikes: {
@@ -52,6 +56,17 @@ const initialProfileState: ProfileState = {
   },
   isPunished: false,
   punishedUntil: null,
+  planFeatures: {
+    academy: true,
+    challenges: true,
+    liveClasses: true,
+    jobBoard: true,
+  },
+  systemSettings: {
+    strikesEnabled: true,
+    jobBoardEnabled: true,
+    academyEnabled: true,
+  },
   isLoading: false,
   isSaving: false,
   error: null,
@@ -74,6 +89,8 @@ export const useProfileStore = create<ProfileStore>((set) => ({
         strikes: data.strikes,
         isPunished: data.isPunished,
         punishedUntil: data.punishedUntil,
+        planFeatures: data.planFeatures,
+        systemSettings: data.systemSettings,
         isLoading: false,
       });
     } catch (error) {

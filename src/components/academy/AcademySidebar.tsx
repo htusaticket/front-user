@@ -10,7 +10,7 @@ import {
   Menu,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import type { ModuleWithProgress, LessonSummary } from "@/types/academy";
 
@@ -20,43 +20,45 @@ interface AcademySidebarProps {
   onLessonSelect: (moduleId: number, lessonId: number) => void;
 }
 
-export function AcademySidebar({ 
-  module, 
-  currentLessonId, 
-  onLessonSelect 
-}: AcademySidebarProps) {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+// Sidebar Content Component - extracted outside to avoid creating during render
+interface SidebarContentProps {
+  module: ModuleWithProgress;
+  currentLessonId: number;
+  onLessonClick: (lessonId: number) => void;
+  onClose: () => void;
+}
 
-  const handleLessonClick = (lessonId: number) => {
-    onLessonSelect(module.id, lessonId);
-    setIsMobileOpen(false);
-  };
-
-  const SidebarContent = () => (
+function SidebarContent({
+  module,
+  currentLessonId,
+  onLessonClick,
+  onClose,
+}: SidebarContentProps) {
+  return (
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between">
           <Link
             href="/academy"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-brand-cyan-dark transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 transition-colors hover:text-brand-cyan-dark"
           >
             <ChevronLeft className="h-4 w-4" />
             Back to Academy
           </Link>
           <button
-            onClick={() => setIsMobileOpen(false)}
+            onClick={onClose}
             className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        
+
         {/* Module Info */}
         <div className="mt-4">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-brand-cyan-dark" />
-            <h2 className="font-display font-bold text-brand-primary line-clamp-1">
+            <h2 className="line-clamp-1 font-display font-bold text-brand-primary">
               {module.title}
             </h2>
           </div>
@@ -89,7 +91,7 @@ export function AcademySidebar({
               lesson={lesson}
               index={index + 1}
               isActive={lesson.id === currentLessonId}
-              onSelect={() => handleLessonClick(lesson.id)}
+              onSelect={() => onLessonClick(lesson.id)}
             />
           ))}
         </div>
@@ -99,7 +101,7 @@ export function AcademySidebar({
       <div className="border-t border-gray-200 p-4">
         <div className="text-center text-xs text-gray-500">
           {module.progress === 100 ? (
-            <span className="flex items-center justify-center gap-1 text-green-600 font-medium">
+            <span className="flex items-center justify-center gap-1 font-medium text-green-600">
               <CheckCircle className="h-4 w-4" />
               Module Completed!
             </span>
@@ -110,6 +112,26 @@ export function AcademySidebar({
       </div>
     </div>
   );
+}
+
+export function AcademySidebar({
+  module,
+  currentLessonId,
+  onLessonSelect,
+}: AcademySidebarProps) {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const handleLessonClick = useCallback(
+    (lessonId: number) => {
+      onLessonSelect(module.id, lessonId);
+      setIsMobileOpen(false);
+    },
+    [module.id, onLessonSelect],
+  );
+
+  const handleClose = useCallback(() => {
+    setIsMobileOpen(false);
+  }, []);
 
   return (
     <>
@@ -128,7 +150,7 @@ export function AcademySidebar({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsMobileOpen(false)}
+            onClick={handleClose}
             className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           />
         )}
@@ -144,7 +166,12 @@ export function AcademySidebar({
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 z-50 h-full w-80 bg-white shadow-2xl lg:hidden"
           >
-            <SidebarContent />
+            <SidebarContent
+              module={module}
+              currentLessonId={currentLessonId}
+              onLessonClick={handleLessonClick}
+              onClose={handleClose}
+            />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -152,7 +179,12 @@ export function AcademySidebar({
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block lg:w-72 lg:shrink-0">
         <div className="sticky top-20 h-[calc(100vh-6rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <SidebarContent />
+          <SidebarContent
+            module={module}
+            currentLessonId={currentLessonId}
+            onLessonClick={handleLessonClick}
+            onClose={handleClose}
+          />
         </div>
       </aside>
     </>
@@ -182,8 +214,8 @@ function LessonItem({ lesson, index, isActive, onSelect }: LessonItemProps) {
           isActive
             ? "bg-white/20 text-white"
             : lesson.completed
-            ? "bg-green-100 text-green-600"
-            : "bg-gray-200 text-gray-500"
+              ? "bg-green-100 text-green-600"
+              : "bg-gray-200 text-gray-500"
         }`}
       >
         {lesson.completed && !isActive ? (

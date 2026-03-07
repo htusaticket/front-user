@@ -35,7 +35,7 @@ import type { Application, ApplicationStatus } from "@/types/jobs";
 // Column configuration
 const COLUMNS: {
   id: ApplicationStatus;
-  key: "applied" | "interview" | "offer" | "rejected";
+  key: "applied" | "pending" | "interview" | "rejected";
   title: string;
   borderColor: string;
   bgColor: string;
@@ -52,6 +52,15 @@ const COLUMNS: {
     badgeColor: "bg-blue-100 text-blue-700",
   },
   {
+    id: "PENDING",
+    key: "pending",
+    title: "Pending",
+    borderColor: "border-yellow-200",
+    bgColor: "bg-yellow-50",
+    textColor: "text-yellow-900",
+    badgeColor: "bg-yellow-100 text-yellow-700",
+  },
+  {
     id: "INTERVIEW",
     key: "interview",
     title: "Interview",
@@ -59,15 +68,6 @@ const COLUMNS: {
     bgColor: "bg-purple-50",
     textColor: "text-purple-900",
     badgeColor: "bg-purple-100 text-purple-700",
-  },
-  {
-    id: "OFFER",
-    key: "offer",
-    title: "Offer",
-    borderColor: "border-green-200",
-    bgColor: "bg-green-50",
-    textColor: "text-green-900",
-    badgeColor: "bg-green-100 text-green-700",
   },
   {
     id: "REJECTED",

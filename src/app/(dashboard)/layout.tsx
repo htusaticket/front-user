@@ -19,7 +19,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const fetchUser = useAuthStore((state) => state.fetchUser);
-  const user = useAuthStore((state) => state.user);
+  const _user = useAuthStore((state) => state.user);
   const _isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +68,7 @@ export default function DashboardLayout({
     };
 
     verifyAuth();
-  }, [fetchUser, router]);
+  }, [fetchUser, fetchProfile, router]);
 
   // Si hay error, mostrar loading hasta que se complete la redirección
   if (hasError) {

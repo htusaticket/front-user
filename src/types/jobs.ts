@@ -1,6 +1,6 @@
 // Types for Job Board and Applications (Sprint 4 - JFAL-26 & JFAL-27)
 
-export type ApplicationStatus = "APPLIED" | "INTERVIEW" | "OFFER" | "REJECTED";
+export type ApplicationStatus = "APPLIED" | "PENDING" | "INTERVIEW" | "REJECTED";
 
 export type JobSortBy = 
   | "best_match" 
@@ -62,15 +62,15 @@ export interface Application {
 
 export interface ApplicationsByStatus {
   applied: Application[];
+  pending: Application[];
   interview: Application[];
-  offer: Application[];
   rejected: Application[];
 }
 
 export interface ApplicationStats {
   applied: number;
+  pending: number;
   interview: number;
-  offer: number;
   rejected: number;
 }
 

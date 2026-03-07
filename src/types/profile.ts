@@ -25,7 +25,7 @@ export interface SubscriptionInfo {
 
 export interface ProfileStats {
   completedClasses: number;
-  completedLessons: number;
+  jobApplications: number;
   completedChallenges: number;
 }
 
@@ -35,6 +35,19 @@ export interface StrikeInfo {
   resetDate: string | null;
 }
 
+export interface PlanFeatures {
+  academy: boolean;
+  challenges: boolean;
+  liveClasses: boolean;
+  jobBoard: boolean;
+}
+
+export interface SystemSettings {
+  strikesEnabled: boolean;
+  jobBoardEnabled: boolean;
+  academyEnabled: boolean;
+}
+
 export interface ProfileResponse {
   user: UserProfile;
   subscription: SubscriptionInfo;
@@ -42,6 +55,8 @@ export interface ProfileResponse {
   strikes: StrikeInfo;
   isPunished: boolean;
   punishedUntil: string | null;
+  planFeatures: PlanFeatures;
+  systemSettings: SystemSettings;
 }
 
 export interface UpdateProfileRequest {
