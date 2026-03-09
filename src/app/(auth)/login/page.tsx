@@ -104,7 +104,7 @@ export default function Login() {
       <div className="mb-8 flex flex-col items-center text-center">
         <Image
           src="/logo.webp"
-          alt="High Ticket English"
+          alt="High Ticket USA"
           width={100}
           height={100}
           className="mb-4"

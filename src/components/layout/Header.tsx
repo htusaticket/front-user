@@ -14,8 +14,10 @@ import {
   X,
   Loader2,
   CheckCheck,
+  Briefcase,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -193,6 +195,15 @@ export const Header = () => {
 
         {/* Right Section */}
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* Apply Jobs Button */}
+          <Link
+            href="/jobs"
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-brand-cyan-dark px-4 py-2 text-sm font-bold text-white transition-all hover:bg-brand-primary hover:shadow-lg"
+          >
+            <Briefcase className="h-4 w-4" />
+            Apply Jobs
+          </Link>
+
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button 

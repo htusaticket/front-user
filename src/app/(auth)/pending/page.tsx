@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const WHATSAPP_NUMBER = "59891351103";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "Hola, me registré en High Ticket English y mi cuenta está pendiente de aprobación. ¿Podrían ayudarme?",
+  "Hola, me registré en High Ticket USA y mi cuenta está pendiente de aprobación. ¿Podrían ayudarme?",
 );
 
 export default function Pending() {
