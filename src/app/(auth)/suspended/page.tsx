@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const WHATSAPP_NUMBER = "59891351103";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "Hola, mi cuenta en High Ticket English ha sido suspendida. Me gustaría resolver esta situación y regularizar mi acceso.",
+  "Hola, mi cuenta en High Ticket USA ha sido suspendida. Me gustaría resolver esta situación y regularizar mi acceso.",
 );
 
 export default function Suspended() {

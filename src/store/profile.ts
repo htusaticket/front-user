@@ -63,7 +63,7 @@ const initialProfileState: ProfileState = {
     jobBoard: true,
   },
   systemSettings: {
-    strikesEnabled: true,
+    strikesEnabled: false,
     jobBoardEnabled: true,
     academyEnabled: true,
   },

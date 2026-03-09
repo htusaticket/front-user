@@ -159,7 +159,7 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Job Apply */}
+        {/* Job Applied */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,7 +169,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Job Apply
+                Job Applied
               </p>
               <p className="mt-1 font-display text-3xl font-bold text-brand-primary">
                 {stats.jobApplications}

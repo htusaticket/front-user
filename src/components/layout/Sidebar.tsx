@@ -75,7 +75,7 @@ const SidebarContent = ({
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-black">
             <Image
               src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/falcon-logo.png"
-              alt="High Ticket English"
+              alt="High Ticket USA"
               width={40}
               height={40}
               className="h-10 w-10 object-cover object-top"
@@ -83,7 +83,7 @@ const SidebarContent = ({
           </div>
           <div className="flex flex-col">
             <span className="font-display text-lg font-bold text-brand-primary leading-tight">
-              High Ticket English
+              High Ticket USA
             </span>
           </div>
         </div>
