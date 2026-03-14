@@ -1,4 +1,4 @@
-export type ClassType = "regular" | "workshop";
+export type ClassType = "regular" | "workshop" | "webinar" | "qa" | "masterclass";
 
 export interface Capacity {
   current: number;

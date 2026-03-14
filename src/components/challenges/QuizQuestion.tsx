@@ -63,7 +63,7 @@ export function QuizQuestion({
 
           return (
             <label
-              key={`q${question.id}-opt${optionIndex}`}
+              key={`q${question.id}-opt${option}`}
               className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-all ${getOptionStyle(optionIndex)} ${disabled ? "cursor-not-allowed" : ""}`}
             >
               <input

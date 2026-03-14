@@ -5,6 +5,8 @@ import {
   BookOpen,
   Briefcase,
   Calendar,
+  ChevronsLeft,
+  ChevronsRight,
   Home,
   LogOut,
   Mic,
@@ -24,23 +26,26 @@ const menuItems = [
   { icon: Calendar, label: "Live Classes", href: "/classes", key: "classes" },
   { icon: BookOpen, label: "Academy", href: "/academy", key: "academy" },
   { icon: Mic, label: "Challenges", href: "/challenges", key: "challenges" },
-  { icon: Briefcase, label: "Jobs", href: "/jobs", key: "jobs" },
+  { icon: Briefcase, label: "Job Board", href: "/jobs", key: "jobs" },
   { icon: User, label: "My Profile", href: "/profile", key: "profile" },
 ];
 
-// Context for mobile menu
+// Context for mobile menu and collapse
 const SidebarContext = createContext({
   isOpen: false,
   setIsOpen: (_value: boolean) => {},
+  isCollapsed: false,
+  setIsCollapsed: (_value: boolean) => {},
 });
 
 export const useSidebar = () => useContext(SidebarContext);
 
 export const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen }}>
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, isCollapsed, setIsCollapsed }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -52,11 +57,15 @@ const SidebarContent = ({
   onClose,
   onLogout,
   systemSettings,
+  isCollapsed = false,
+  onToggleCollapse,
 }: {
   pathname: string;
   onClose?: () => void;
   onLogout: () => void;
   systemSettings: { jobBoardEnabled: boolean; academyEnabled: boolean };
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) => {
   // Filter menu items based on system settings
   const filteredMenuItems = menuItems.filter((item) => {
@@ -68,32 +77,46 @@ const SidebarContent = ({
   });
 
   return (
-    <div className="flex h-full flex-col p-6">
+    <div className={`flex h-full flex-col ${isCollapsed ? "p-3" : "p-6"}`}>
       {/* Logo */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className={`mb-8 flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
+        {isCollapsed ? (
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-black">
             <Image
-              src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/falcon-logo.png"
+              src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
               alt="High Ticket USA"
               width={40}
               height={40}
               className="h-10 w-10 object-cover object-top"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="font-display text-lg font-bold text-brand-primary leading-tight">
-              High Ticket USA
-            </span>
-          </div>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-black">
+                <Image
+                  src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+                  alt="High Ticket USA"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-cover object-top"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-display text-lg font-bold text-brand-primary leading-tight">
+                  High Ticket USA
+                </span>
+              </div>
+            </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -106,7 +129,8 @@ const SidebarContent = ({
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              title={isCollapsed ? item.label : undefined}
+              className={`group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2 py-3" : "px-4 py-3"} text-sm font-semibold transition-all ${
                 isActive
                   ? "bg-brand-cyan-dark text-white shadow-lg shadow-brand-cyan-dark/20"
                   : "text-gray-700 hover:bg-gray-50 hover:text-brand-cyan-dark"
@@ -119,8 +143,8 @@ const SidebarContent = ({
                     : "text-gray-500 group-hover:text-brand-cyan-dark"
                 }`}
               />
-              {item.label}
-              {isActive && (
+              {!isCollapsed && item.label}
+              {isActive && !isCollapsed && (
                 <motion.div
                   layoutId="sidebar-indicator"
                   className="absolute right-3 h-2 w-2 rounded-full bg-white"
@@ -133,14 +157,35 @@ const SidebarContent = ({
         })}
       </nav>
 
+      {/* Collapse Toggle (Desktop only) */}
+      {onToggleCollapse && (
+        <div className="border-t border-gray-200 pt-3 mb-1">
+          <button
+            onClick={onToggleCollapse}
+            className={`flex w-full items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl px-4 py-2 text-sm font-semibold text-gray-500 transition-all hover:bg-gray-50 hover:text-brand-cyan-dark`}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? (
+              <ChevronsRight className="h-5 w-5" />
+            ) : (
+              <>
+                <ChevronsLeft className="h-5 w-5" />
+                <span>Collapse</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Logout */}
       <div className="border-t border-gray-200 pt-4">
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50"
+          title={isCollapsed ? "Sign Out" : undefined}
+          className={`flex w-full items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-4"} py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50`}
         >
           <LogOut className="h-5 w-5" />
-          Sign Out
+          {!isCollapsed && "Sign Out"}
         </button>
       </div>
     </div>
@@ -150,7 +195,7 @@ const SidebarContent = ({
 export const Sidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { isOpen, setIsOpen } = useSidebar();
+  const { isOpen, setIsOpen, isCollapsed, setIsCollapsed } = useSidebar();
   const logout = useAuthStore((state) => state.logout);
   const systemSettings = useProfileStore((state) => state.systemSettings);
 
@@ -162,8 +207,18 @@ export const Sidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col border-r border-gray-200 bg-white lg:flex">
-        <SidebarContent pathname={pathname} onLogout={handleLogout} systemSettings={systemSettings} />
+      <aside
+        className={`fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 lg:flex ${
+          isCollapsed ? "w-[72px]" : "w-64"
+        }`}
+      >
+        <SidebarContent
+          pathname={pathname}
+          onLogout={handleLogout}
+          systemSettings={systemSettings}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        />
       </aside>
 
       {/* Mobile Sidebar */}

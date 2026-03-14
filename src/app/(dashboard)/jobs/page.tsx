@@ -128,10 +128,10 @@ export default function JobsPage() {
             {/* Header */}
             <div>
               <h1 className="font-display text-3xl font-bold text-brand-primary">
-                Job Opportunities
+                Job Offers
               </h1>
               <p className="mt-2 text-lg text-gray-600">
-                Find job offers where you can use your English skills
+                Find sales opportunities and apply directly
               </p>
             </div>
 
@@ -238,10 +238,10 @@ export default function JobsPage() {
       {/* Header */}
       <div>
         <h1 className="font-display text-3xl font-bold text-brand-primary">
-          Job Opportunities
+          Job Offers
         </h1>
         <p className="mt-2 text-lg text-gray-600">
-          Find job offers where you can use your English skills
+          Find sales opportunities and apply directly
         </p>
       </div>
 
@@ -603,8 +603,8 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
           <div className="mt-6">
             <h4 className="mb-2 font-bold text-brand-primary">Requirements:</h4>
             <ul className="space-y-2 text-sm text-gray-700">
-              {job.requirements.map((req, index) => (
-                <li key={`${job.id}-req-${index}`} className="flex items-start gap-2">
+              {job.requirements.map((req) => (
+                <li key={`${job.id}-req-${req}`} className="flex items-start gap-2">
                   <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
                   <span>{req}</span>
                 </li>

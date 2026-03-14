@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Trophy, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Trophy, RefreshCw, Star } from "lucide-react";
 
-import { CircularProgress, ConfettiEffect } from "@/components/ui";
+import { ConfettiEffect } from "@/components/ui";
 import type { QuizResult, QuizQuestion as QuizQuestionType } from "@/types/challenges";
 
 import { QuizQuestion } from "./QuizQuestion";
@@ -16,7 +16,70 @@ interface QuizResultsProps {
   onDismiss?: () => void;
 }
 
-export function QuizResults({ result, questions, userAnswers, onRetry, onDismiss }: QuizResultsProps) {
+function getScoreColor(score: number): string {
+  if (score >= 100) return "#22c55e"; // green-500 
+  if (score >= 70) return "#22c55e";  // green-500
+  if (score >= 36) return "#f97316";  // orange-500
+  return "#ef4444";                   // red-500
+}
+
+function CircularProgress({ score }: { score: number }) {
+  const size = 140;
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = getScoreColor(score);
+  const isPerfect = score >= 100;
+
+  return (
+    <div className="relative mx-auto mb-6 flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#f3f4f6"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress circle */}
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+        />
+      </svg>
+      {/* Center content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {isPerfect ? (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 1, type: "spring", stiffness: 200 }}
+          >
+            <Star className="h-10 w-10 fill-yellow-400 text-yellow-400" />
+          </motion.div>
+        ) : (
+          <span className="font-display text-3xl font-bold" style={{ color }}>
+            {score}%
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function QuizResults({ result, questions, userAnswers, onRetry: _onRetry, onDismiss }: QuizResultsProps) {
   const isPassed = result.passed;
 
   return (
@@ -25,8 +88,8 @@ export function QuizResults({ result, questions, userAnswers, onRetry, onDismiss
       animate={{ opacity: 1, scale: 1 }}
       className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm"
     >
-      {/* Confetti for passing */}
-      <ConfettiEffect trigger={isPassed} type="celebration" />
+      {/* Confetti for passing or perfect score */}
+      <ConfettiEffect trigger={isPassed || result.score >= 100} type="celebration" />
 
       {/* Result Header */}
       <div className="text-center">
@@ -46,15 +109,8 @@ export function QuizResults({ result, questions, userAnswers, onRetry, onDismiss
           {isPassed ? "Congratulations!" : "Keep Practicing!"}
         </h2>
 
-        {/* Score Circle */}
-        <div className="mx-auto mb-6">
-          <CircularProgress
-            value={result.score}
-            size={140}
-            strokeWidth={10}
-            color={isPassed ? "text-green-500" : "text-orange-500"}
-          />
-        </div>
+        {/* Circular Progress Ring */}
+        <CircularProgress score={result.score} />
 
         {/* Stats */}
         <div className="mb-6 grid grid-cols-2 gap-4">
@@ -123,17 +179,6 @@ export function QuizResults({ result, questions, userAnswers, onRetry, onDismiss
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        {!isPassed && onRetry && (
-          <motion.button
-            onClick={onRetry}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/20 transition-all hover:bg-brand-cyan"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </motion.button>
-        )}
         <motion.button
           onClick={onDismiss}
           whileHover={{ scale: 1.02 }}

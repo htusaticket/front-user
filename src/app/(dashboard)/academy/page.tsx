@@ -24,7 +24,7 @@ export default function AcademyPage() {
             Academy
           </h1>
           <p className="mt-2 text-base text-gray-600 sm:text-lg">
-            Access all learning materials and courses
+            Access learning materials and recorded lessons
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export default function AcademyPage() {
             Academy
           </h1>
           <p className="mt-2 text-base text-gray-600 sm:text-lg">
-            Access all learning materials and courses
+            Access learning materials and recorded lessons
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export default function AcademyPage() {
             Academy
           </h1>
           <p className="mt-2 text-base text-gray-600 sm:text-lg">
-            Access all learning materials and courses
+            Access learning materials and recorded lessons
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export default function AcademyPage() {
           Academy
         </h1>
         <p className="mt-2 text-base text-gray-600 sm:text-lg">
-          Access all learning materials and courses
+          Access learning materials and recorded lessons
         </p>
       </div>
 

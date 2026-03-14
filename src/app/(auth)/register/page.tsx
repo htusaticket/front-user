@@ -245,7 +245,7 @@ export default function Register() {
           </label>
           <PhoneInput
             international
-            countryCallingCodeEditable={false}
+            countryCallingCodeEditable={true}
             defaultCountry="AR"
             value={formData.phone}
             onChange={(value) => handleChange("phone", value || "")}
