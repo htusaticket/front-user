@@ -9,7 +9,6 @@ import {
   AlertCircle,
   CheckCircle,
   Sparkles,
-  Infinity as InfinityIcon,
   LayoutGrid,
   CalendarDays,
 } from "lucide-react";
@@ -96,7 +95,7 @@ export default function ClassesPage() {
           Live Classes & Workshops
         </h1>
         <p className="mt-2 text-base text-gray-600 sm:text-lg">
-          Join interactive sessions to accelerate your learning
+          Browse upcoming live sessions and reserve your spot
         </p>
       </div>
 
@@ -208,17 +207,21 @@ export default function ClassesPage() {
                             </div>
 
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                              {isClassStartingSoon(classItem.time, classItem.day) ? (
+                              {classItem.meetLink ? (
                                 <motion.a
-                                  href={classItem.meetLink ?? "#"}
+                                  href={classItem.meetLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
-                                  className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/30 transition-all hover:bg-brand-cyan"
+                                  className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all ${
+                                    isClassStartingSoon(classItem.time, classItem.day)
+                                      ? "bg-brand-cyan-dark shadow-brand-cyan-dark/30 hover:bg-brand-cyan animate-pulse"
+                                      : "bg-brand-cyan-dark/80 shadow-brand-cyan-dark/20 hover:bg-brand-cyan-dark"
+                                  }`}
                                 >
                                   <Video className="h-4 w-4" />
-                                  Join Class
+                                  {isClassStartingSoon(classItem.time, classItem.day) ? "Join Class Now" : "Class Link"}
                                 </motion.a>
                               ) : (
                                 <button
@@ -282,14 +285,28 @@ export default function ClassesPage() {
                     <Calendar className="h-5 w-5" />
                   </div>
                   <h2 className="font-display text-xl font-bold text-brand-primary">
-                    Available Sessions
+                    All Sessions
                   </h2>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {availableClasses.map((classItem) => {
                     const isUnlimited = classItem.capacity.max === null;
-                    const isWorkshop = classItem.type === "workshop";
+
+                    const typeBadge = (() => {
+                      switch (classItem.type) {
+                      case "workshop":
+                        return { label: "Workshop", icon: <Sparkles className="h-3 w-3" />, classes: "bg-brand-primary/5 text-brand-primary ring-brand-primary/10" };
+                      case "webinar":
+                        return { label: "Webinar", icon: <Users className="h-3 w-3" />, classes: "bg-purple-50 text-purple-600 ring-purple-100" };
+                      case "qa":
+                        return { label: "Q&A", icon: <Users className="h-3 w-3" />, classes: "bg-amber-50 text-amber-600 ring-amber-100" };
+                      case "masterclass":
+                        return { label: "Masterclass", icon: <Sparkles className="h-3 w-3" />, classes: "bg-emerald-50 text-emerald-600 ring-emerald-100" };
+                      default:
+                        return { label: "Class", icon: <Users className="h-3 w-3" />, classes: "bg-blue-50 text-blue-600 ring-blue-100" };
+                      }
+                    })();
 
                     return (
                       <motion.div
@@ -307,18 +324,10 @@ export default function ClassesPage() {
                         <div className="relative p-5 pb-0">
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1">
-                              {isWorkshop && (
-                                <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-brand-primary/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-primary ring-1 ring-inset ring-brand-primary/10">
-                                  <Sparkles className="h-3 w-3" />
-                                  Workshop
-                                </span>
-                              )}
-                              {!isWorkshop && (
-                                <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600 ring-1 ring-inset ring-blue-100">
-                                  <Users className="h-3 w-3" />
-                                  Class
-                                </span>
-                              )}
+                              <span className={`mb-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${typeBadge.classes}`}>
+                                {typeBadge.icon}
+                                {typeBadge.label}
+                              </span>
 
                               <h3 className="font-display text-lg font-bold leading-tight text-brand-primary">
                                 {classItem.title}
@@ -347,30 +356,21 @@ export default function ClassesPage() {
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-3 text-sm">
-                              {isUnlimited ? (
-                                <>
-                                  <InfinityIcon className="h-4 w-4 text-brand-primary" />
-                                  <span className="font-medium text-brand-primary">
-                                    Unlimited Spots
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <Users className="h-4 w-4 text-gray-400" />
-                                  <span
-                                    className={`font-medium ${
-                                      classItem.isFull
-                                        ? "text-red-600"
-                                        : "text-gray-700"
-                                    }`}
-                                  >
-                                    {classItem.capacity.current} /{" "}
-                                    {classItem.capacity.max} spots filled
-                                  </span>
-                                </>
-                              )}
-                            </div>
+                            {!isUnlimited && (
+                              <div className="flex items-center gap-3 text-sm">
+                                <Users className="h-4 w-4 text-gray-400" />
+                                <span
+                                  className={`font-medium ${
+                                    classItem.isFull
+                                      ? "text-red-600"
+                                      : "text-gray-700"
+                                  }`}
+                                >
+                                  {classItem.capacity.current} /{" "}
+                                  {classItem.capacity.max} spots filled
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -388,7 +388,7 @@ export default function ClassesPage() {
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan-dark py-3 text-sm font-bold text-white shadow-lg shadow-brand-cyan-dark/30 transition-all hover:bg-brand-cyan"
                               >
                                 <Video className="h-4 w-4" />
-                                {isWorkshop ? "Join Workshop" : "Join Class"}
+                                {classItem.type !== "regular" ? `Join ${typeBadge.label}` : "Join Class"}
                               </motion.a>
                             ) : (
                               <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-100 py-3 text-sm font-bold text-green-700">
@@ -410,15 +410,13 @@ export default function ClassesPage() {
                               className={`w-full rounded-xl py-3 text-sm font-bold transition-all ${
                                 classItem.isFull
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : isWorkshop
-                                    ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90 hover:shadow-brand-primary/30"
-                                    : "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90"
+                                  : "bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:bg-brand-primary/90"
                               }`}
                             >
                               {classItem.isFull
                                 ? "Full"
-                                : isWorkshop
-                                  ? "Join Workshop"
+                                : classItem.type !== "regular"
+                                  ? `Join ${typeBadge.label}`
                                   : "Book Class"}
                             </motion.button>
                           )}
@@ -435,7 +433,24 @@ export default function ClassesPage() {
 
       {/* Cancel Modal */}
       {showCancelModal && selectedClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowCancelModal(false);
+              setSelectedClass(null);
+            }
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCancelModal(false);
+              setSelectedClass(null);
+            }
+          }}
+          role="dialog"
+          tabIndex={-1}
+          ref={(el) => el?.focus()}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

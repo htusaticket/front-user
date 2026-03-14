@@ -106,7 +106,7 @@ export function QuizDetailModal({
                               
                               return (
                                 <div
-                                  key={`${question.id}-option-${optIndex}`}
+                                  key={`${question.id}-option-${option}`}
                                   className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${optionClass}`}
                                 >
                                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-xs font-medium">

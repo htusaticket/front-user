@@ -16,7 +16,6 @@ import {
   CheckCheck,
   Briefcase,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -35,7 +34,7 @@ const getPageTitle = (pathname: string): string => {
     "/classes": "Live Classes",
     "/academy": "Academy",
     "/challenges": "Daily Challenges",
-    "/jobs": "Job Opportunities",
+    "/jobs": "Job Offers",
     "/jobs/my-applications": "My Applications",
     "/profile": "My Profile",
   };
@@ -100,7 +99,7 @@ const getNotificationRoute = (notification: Notification): string | null => {
 };
 
 export const Header = () => {
-  const { setIsOpen } = useSidebar();
+  const { setIsOpen, isCollapsed } = useSidebar();
   const pathname = usePathname();
   const router = useRouter();
   const pageTitle = getPageTitle(pathname);
@@ -176,7 +175,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-200 bg-white lg:ml-64">
+    <header className={`sticky top-0 z-30 border-b border-gray-200 bg-white transition-all duration-300 ${isCollapsed ? "lg:ml-[72px]" : "lg:ml-64"}`}>
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-3">
@@ -198,10 +197,10 @@ export const Header = () => {
           {/* Apply Jobs Button */}
           <Link
             href="/jobs"
-            className="hidden sm:flex items-center gap-2 rounded-xl bg-brand-cyan-dark px-4 py-2 text-sm font-bold text-white transition-all hover:bg-brand-primary hover:shadow-lg"
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-[#4025ef] px-4 py-2 text-sm font-bold text-white transition-all hover:bg-[#3520d9] hover:shadow-lg"
           >
             <Briefcase className="h-4 w-4" />
-            Apply Jobs
+            Browse Jobs
           </Link>
 
           {/* Notifications */}
@@ -329,13 +328,10 @@ export const Header = () => {
                 {displayPlan}
               </p>
             </div>
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border-2 border-brand-cyan-dark shadow-sm">
-              <Image
-                src="/logo.webp"
-                alt="User"
-                fill
-                className="object-cover"
-              />
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-brand-cyan-dark bg-brand-primary shadow-sm">
+              <span className="text-sm font-bold text-white">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
             </div>
           </div>
         </div>

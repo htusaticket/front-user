@@ -72,7 +72,7 @@ const COLUMNS: {
   {
     id: "REJECTED",
     key: "rejected",
-    title: "Rejected",
+    title: "Lost",
     borderColor: "border-red-200",
     bgColor: "bg-red-50",
     textColor: "text-red-900",
@@ -210,7 +210,7 @@ export default function MyApplicationsPage() {
           My Applications
         </h1>
         <p className="mt-2 text-lg text-gray-600">
-          Drag and drop cards to manage your application status
+          Organize and track your job applications
         </p>
       </div>
 
@@ -266,7 +266,7 @@ export default function MyApplicationsPage() {
       {/* Info Box */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-900">
-          💡 <strong>Tip:</strong> Drag cards between columns to update your application status.
+          💡 <strong>Tip:</strong> Use the small dots next to the job title to drag cards between columns.
           Click the notes icon to add personal notes.
         </p>
       </div>

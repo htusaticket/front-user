@@ -113,7 +113,7 @@ export default function ProfilePage() {
           My Profile
         </h1>
         <p className="mt-2 text-lg text-gray-600">
-          Manage your personal information and account settings
+          View your account information and membership details
         </p>
       </div>
 
@@ -147,7 +147,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Days Remaining
+                Days Left
               </p>
               <p className="mt-1 font-display text-3xl font-bold text-brand-primary">
                 {daysRemaining}
@@ -169,7 +169,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Job Applied
+                Jobs Applied
               </p>
               <p className="mt-1 font-display text-3xl font-bold text-brand-primary">
                 {stats.jobApplications}

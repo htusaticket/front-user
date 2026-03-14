@@ -74,10 +74,10 @@ export default function DashboardPage() {
       {/* Header Section */}
       <div>
         <h1 className="font-display text-2xl font-bold text-brand-primary sm:text-3xl">
-          Hello, {user?.firstName || "Guest"} 👋
+          Hello {user?.firstName || "Guest"} 👋
         </h1>
         <p className="mt-2 text-base text-gray-700 sm:text-lg">
-          Welcome to your learning dashboard
+          Welcome to your Dashboard
         </p>
       </div>
 

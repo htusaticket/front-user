@@ -56,14 +56,14 @@ export function ResourcesList({ resources }: ResourcesListProps) {
           return (
             <div
               key={resource.id}
-              className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-brand-cyan-dark hover:bg-white"
+              className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all hover:border-brand-cyan-dark hover:bg-white"
             >
-              <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${config.bgColor}`}>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${config.bgColor}`}>
                   <Icon className={`h-5 w-5 ${config.iconColor}`} />
                 </div>
-                <div>
-                  <p className="font-bold text-brand-primary">{resource.title}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-brand-primary truncate">{resource.title}</p>
                   {resource.size && (
                     <p className="text-xs text-gray-500">{resource.size}</p>
                   )}
@@ -71,7 +71,7 @@ export function ResourcesList({ resources }: ResourcesListProps) {
               </div>
               <button
                 onClick={() => handleDownload(resource)}
-                className="flex items-center gap-2 rounded-lg bg-brand-cyan-dark px-4 py-2 text-sm font-bold text-white transition-all hover:bg-brand-cyan"
+                className="flex items-center justify-center gap-2 rounded-lg bg-brand-cyan-dark px-4 py-2 text-sm font-bold text-white transition-all hover:bg-brand-cyan shrink-0 w-full sm:w-auto"
               >
                 {resource.type === "LINK" ? (
                   <>

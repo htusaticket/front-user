@@ -101,8 +101,8 @@ function SidebarContent({
       <div className="border-t border-gray-200 p-4">
         <div className="text-center text-xs text-gray-500">
           {module.progress === 100 ? (
-            <span className="flex items-center justify-center gap-1 font-medium text-green-600">
-              <CheckCircle className="h-4 w-4" />
+            <span className="flex items-center justify-center gap-1 text-sm font-bold text-green-600">
+              <CheckCircle className="h-5 w-5" />
               Module Completed!
             </span>
           ) : (

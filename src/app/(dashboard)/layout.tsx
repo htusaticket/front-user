@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 
 import { Header } from "@/components/layout/Header";
-import { Sidebar, SidebarProvider } from "@/components/layout/Sidebar";
+import { Sidebar, SidebarProvider, useSidebar } from "@/components/layout/Sidebar";
 import { NoSubscriptionOverlay } from "@/components/shared/NoSubscriptionOverlay";
 import { getErrorCode } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
@@ -96,14 +96,24 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-white">
-        <Sidebar />
-        <Header />
-        <main className="min-h-[calc(100vh-64px)] p-6 lg:ml-64 lg:p-8">
-          {children}
-        </main>
-      </div>
+      <DashboardContent>{children}</DashboardContent>
       <NoSubscriptionOverlay />
     </SidebarProvider>
+  );
+}
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const { isCollapsed } = useSidebar();
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Sidebar />
+      <Header />
+      <main className={`min-h-[calc(100vh-64px)] p-6 transition-all duration-300 lg:p-8 ${
+        isCollapsed ? "lg:ml-[72px]" : "lg:ml-64"
+      }`}>
+        {children}
+      </main>
+    </div>
   );
 }
