@@ -1,11 +1,34 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 
 import { ProgressBar } from "@/components/ui";
 import type { ModuleWithProgress } from "@/types/academy";
+
+function convertGoogleDriveUrl(url: string): string {
+  const trimmed = url.trim();
+  let fileId: string | null = null;
+
+  const fileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (fileMatch?.[1]) fileId = fileMatch[1];
+
+  if (!fileId) {
+    const openMatch = trimmed.match(/drive\.google\.com\/open\?id=([^&]+)/);
+    if (openMatch?.[1]) fileId = openMatch[1];
+  }
+
+  if (!fileId) {
+    const ucMatch = trimmed.match(/drive\.google\.com\/uc\?.*id=([^&]+)/);
+    if (ucMatch?.[1]) fileId = ucMatch[1];
+  }
+
+  if (fileId) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+
+  return trimmed;
+}
 
 interface ModuleCardProps {
   module: ModuleWithProgress;
@@ -13,6 +36,7 @@ interface ModuleCardProps {
 }
 
 export function ModuleCard({ module, index = 0 }: ModuleCardProps) {
+  const imageUrl = module.image ? convertGoogleDriveUrl(module.image) : "/placeholder-module.jpg";
   // Find the first incomplete lesson, or default to first lesson
   const firstIncompleteLessonId = module.lessons.find((l) => !l.completed)?.id || module.lessons[0]?.id;
   const href = `/academy/${module.id}/${firstIncompleteLessonId || 1}`;
@@ -31,11 +55,12 @@ export function ModuleCard({ module, index = 0 }: ModuleCardProps) {
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
           {/* Image */}
-          <Image
-            src={module.image}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
             alt={module.title}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
 
           {/* Text Overlay on Image */}

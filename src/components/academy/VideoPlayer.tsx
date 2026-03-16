@@ -72,7 +72,7 @@ export function VideoPlayer({ url, title = "Video", className = "" }: VideoPlaye
 
   if (!url || !videoInfo) {
     return (
-      <div className={`flex aspect-[4/3] max-h-[420px] w-full items-center justify-center bg-gray-900 ${className}`}>
+      <div className={`flex aspect-video w-full items-center justify-center bg-gray-900 ${className}`}>
         <p className="text-gray-400">No video available</p>
       </div>
     );
@@ -81,7 +81,7 @@ export function VideoPlayer({ url, title = "Video", className = "" }: VideoPlaye
   // Direct video file
   if (videoInfo.platform === "direct" && /\.(mp4|webm|ogg)$/i.test(videoInfo.embedUrl)) {
     return (
-      <div className={`aspect-[4/3] max-h-[420px] w-full bg-black ${className}`}>
+      <div className={`aspect-video w-full bg-black ${className}`}>
         <video
           src={videoInfo.embedUrl}
           controls
@@ -96,7 +96,7 @@ export function VideoPlayer({ url, title = "Video", className = "" }: VideoPlaye
 
   // Embedded video (YouTube, Vimeo, Loom)
   return (
-    <div className={`aspect-[4/3] max-h-[420px] w-full bg-black ${className}`}>
+    <div className={`aspect-video w-full bg-black ${className}`}>
       <iframe
         src={videoInfo.embedUrl}
         title={title}
