@@ -8,6 +8,7 @@ import {
   Video,
   AlertCircle,
   CheckCircle,
+  ShieldAlert,
   Sparkles,
   LayoutGrid,
   CalendarDays,
@@ -16,6 +17,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { isClassStartingSoon, isLateCancellation } from "@/lib/utils/date-utils";
+import { useAuthStore } from "@/store/auth";
 import { useClassesStore } from "@/store/classes";
 import type { ClassSession } from "@/types/classes";
 
@@ -27,6 +29,23 @@ export default function ClassesPage() {
 
   const { availableClasses, mySchedule, isLoading, fetchAvailableClasses,
     fetchMySchedule, enrollInClass, cancelEnrollment } = useClassesStore();
+
+  const user = useAuthStore((state) => state.user);
+
+  // Check if user is currently punished (banned from live classes)
+  const isPunished = user?.isPunished && user?.punishedUntil
+    ? new Date(user.punishedUntil) > new Date()
+    : false;
+
+  const punishedUntilFormatted = user?.punishedUntil
+    ? new Date(user.punishedUntil).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
 
   useEffect(() => {
     if (activeTab === "available") {
@@ -51,6 +70,11 @@ export default function ClassesPage() {
   };
 
   const handleEnroll = async (classId: number) => {
+    if (isPunished) {
+      toast.error("Your account is temporarily restricted. You cannot enroll in classes right now.");
+      return;
+    }
+
     try {
       const response = await enrollInClass(classId);
       toast.success(response.message);
@@ -98,6 +122,32 @@ export default function ClassesPage() {
           Browse upcoming live sessions and reserve your spot
         </p>
       </div>
+
+      {/* Punishment Banner */}
+      {isPunished && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border-2 border-red-200 bg-red-50 p-4 sm:p-6"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+              <ShieldAlert className="h-5 w-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold text-red-800 sm:text-lg">
+                Account Temporarily Restricted
+              </h3>
+              <p className="mt-1 text-sm text-red-700">
+                Due to accumulated strikes, your access to live classes has been
+                temporarily suspended. You will not be able to join or enroll in
+                classes until{" "}
+                <strong>{punishedUntilFormatted}</strong>.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-200">
@@ -207,7 +257,15 @@ export default function ClassesPage() {
                             </div>
 
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                              {classItem.meetLink ? (
+                              {isPunished ? (
+                                <div
+                                  className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
+                                  title={`Access restricted until ${punishedUntilFormatted}`}
+                                >
+                                  <ShieldAlert className="h-4 w-4" />
+                                  Access Restricted
+                                </div>
+                              ) : classItem.meetLink ? (
                                 <motion.a
                                   href={classItem.meetLink}
                                   target="_blank"
@@ -376,7 +434,16 @@ export default function ClassesPage() {
 
                         {/* Card Action */}
                         <div className="p-5 pt-0">
-                          {classItem.isEnrolled ? (
+                          {isPunished ? (
+                            // Usuario punished - sin acceso
+                            <div
+                              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-red-200 bg-red-50 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
+                              title={`Access restricted until ${punishedUntilFormatted}`}
+                            >
+                              <ShieldAlert className="h-4 w-4" />
+                              Access Restricted
+                            </div>
+                          ) : classItem.isEnrolled ? (
                             // Usuario ya inscrito
                             isClassStartingSoon(classItem.time, classItem.day) ? (
                               <motion.a
