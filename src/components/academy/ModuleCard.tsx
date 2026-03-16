@@ -50,7 +50,7 @@ export function ModuleCard({ module, index = 0 }: ModuleCardProps) {
     >
       <Link href={href}>
         {/* Image Section */}
-        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
           {/* Overlay Gradient */}
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
