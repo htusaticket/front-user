@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Mail, X } from "lucide-react";
+import { CreditCard, Mail } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 
 import { useProfileStore } from "@/store/profile";
@@ -9,14 +9,13 @@ import { useProfileStore } from "@/store/profile";
 export function NoSubscriptionOverlay() {
   const { subscription, isLoading, user } = useProfileStore();
   const [showOverlay, setShowOverlay] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
 
   // Calculate whether overlay should be visible based on conditions
   const shouldShowOverlay = useMemo(() => {
-    if (isLoading || dismissed) return false;
+    if (isLoading) return false;
     if (!subscription) return false;
     return !subscription.hasActiveSubscription;
-  }, [subscription, isLoading, dismissed]);
+  }, [subscription, isLoading]);
 
   useEffect(() => {
     if (shouldShowOverlay) {
@@ -28,10 +27,6 @@ export function NoSubscriptionOverlay() {
     const hideTimer = setTimeout(() => setShowOverlay(false), 0);
     return () => clearTimeout(hideTimer);
   }, [shouldShowOverlay]);
-
-  const handleDismiss = () => {
-    setDismissed(true);
-  };
 
   // Don't show for staff/admin users
   if (user?.role === "ADMIN" || user?.role === "SUPERADMIN") {
@@ -53,13 +48,6 @@ export function NoSubscriptionOverlay() {
             exit={{ scale: 0.9, opacity: 0 }}
             className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
           >
-            {/* Close button */}
-            <button
-              onClick={handleDismiss}
-              className="absolute right-4 top-4 rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
 
             {/* Icon */}
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100">
@@ -72,9 +60,9 @@ export function NoSubscriptionOverlay() {
                 Welcome, {user?.firstName}! 🎉
               </h2>
               <p className="text-gray-600 mb-6">
-                Your account has been approved! To access all premium features like 
-                <strong> live classes</strong>, <strong>challenges</strong>, and the 
-                <strong> job board</strong>, you need an active subscription plan.
+                Debes renovar tu plan para continuar. Para acceder a las funciones premium como
+                <strong> clases en vivo</strong>, <strong>challenges</strong>, y el 
+                <strong> job board</strong>, necesitas un plan de suscripción activo.
               </p>
 
               {/* Features list */}
@@ -102,12 +90,6 @@ export function NoSubscriptionOverlay() {
                 >
                   Contact Support
                 </a>
-                <button
-                  onClick={handleDismiss}
-                  className="w-full rounded-xl border border-gray-200 py-3 text-center font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Continue with limited access
-                </button>
               </div>
             </div>
           </motion.div>

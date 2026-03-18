@@ -16,6 +16,7 @@ export interface ClassSession {
   isEnrolled: boolean;
   isFull: boolean;
   meetLink: string | null;
+  materialsLink: string | null;
   description: string | null;
 }
 

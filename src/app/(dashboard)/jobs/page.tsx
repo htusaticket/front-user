@@ -82,6 +82,8 @@ export default function JobsPage() {
   const handleApply = useCallback(async (jobId: number) => {
     setIsApplying(true);
     await applyToJob(jobId);
+    // Open airtable application form
+    window.open("https://airtable.com/appiPekJv9PdMSORq/pagHDDxQnMHRJxILZ/form", "_blank");
     setIsApplying(false);
   }, [applyToJob]);
 
@@ -529,7 +531,9 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
         </div>
         <div className="flex items-center gap-2">
           <DollarSign className="h-3.5 w-3.5" />
-          {job.salaryRange}
+          {job.oteMin && job.oteMax
+            ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
+            : job.salaryRange || "Not specified"}
         </div>
       </div>
       <div className="mt-3">
@@ -582,7 +586,9 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
           </div>
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-gray-400" />
-            <span>{job.salaryRange}</span>
+            <span>{job.oteMin && job.oteMax
+              ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
+              : job.salaryRange || "Not specified"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Briefcase className="h-4 w-4 text-gray-400" />

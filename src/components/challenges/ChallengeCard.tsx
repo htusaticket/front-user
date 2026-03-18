@@ -102,6 +102,54 @@ export function ChallengeCard({
     );
   }
 
+  // Show completed state for reviewed audio challenges
+  if (isAudio && isCompleted) {
+    const isApproved = challenge.status === "approved";
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`overflow-hidden rounded-2xl border-2 bg-white shadow-sm ${
+          isApproved ? "border-green-200" : "border-orange-200"
+        }`}
+      >
+        <div className={`px-6 py-4 ${isApproved ? "bg-green-50" : "bg-orange-50"}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Trophy className={`h-5 w-5 ${isApproved ? "text-green-700" : "text-orange-700"}`} />
+              <span className={`text-sm font-bold uppercase tracking-wider ${
+                isApproved ? "text-green-900" : "text-orange-900"
+              }`}>
+                Speaking Challenge Reviewed
+              </span>
+            </div>
+            <StatusBadge status={isApproved ? "APPROVED" : "NEEDS_IMPROVEMENT"} />
+          </div>
+        </div>
+        <div className="p-6 text-center">
+          <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+            isApproved ? "bg-green-100" : "bg-orange-100"
+          }`}>
+            {isApproved ? (
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            ) : (
+              <Trophy className="h-8 w-8 text-orange-600" />
+            )}
+          </div>
+          <h3 className="font-display text-xl font-bold text-brand-primary">
+            {challenge.title}
+          </h3>
+          <p className="mt-2 text-gray-600">
+            {isApproved 
+              ? "Great job! Your speaking challenge has been approved." 
+              : "Your teacher has reviewed your recording. Keep practicing!"}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   if (isSubmitted && !isCompleted) {
     // Submitted state - waiting for review
     return (
