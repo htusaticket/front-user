@@ -19,10 +19,20 @@ import {
   Edit,
   Save,
   X,
+  Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState, useCallback } from "react";
 
 import { useProfileStore, formatResetDate, hasStrikes, getStrikeProgress } from "@/store/profile";
+
+const REFERENCE_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+  youtube: "YouTube",
+  friend: "Recomendación de amigo",
+  other: "Otro",
+};
 
 export default function ProfilePage() {
   const {
@@ -441,6 +451,20 @@ export default function ProfilePage() {
                 {user?.country || "Not provided"}
               </div>
             )}
+          </div>
+
+          {/* Reference - Read Only */}
+          <div>
+            <label className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-700">
+              <Users className="h-4 w-4 text-brand-cyan-dark" />
+              How did you hear about us?
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                Read only
+              </span>
+            </label>
+            <div className="w-full rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              {user?.reference ? (REFERENCE_LABELS[user.reference] || user.reference) : "Not provided"}
+            </div>
           </div>
         </div>
       </motion.div>

@@ -32,6 +32,42 @@ export default function ClassesPage() {
 
   const user = useAuthStore((state) => state.user);
 
+  // Filter out past classes from mySchedule
+  const upcomingSchedule = mySchedule.filter((classItem) => {
+    // If the class day is "Today", check if the time has passed
+    if (classItem.day === "Today") {
+      const endTimeStr = classItem.time.split(" - ")[1];
+      if (endTimeStr) {
+        const [hours, minutes] = endTimeStr.split(":").map(Number);
+        if (hours !== undefined && minutes !== undefined) {
+          const classEndTime = new Date();
+          classEndTime.setHours(hours, minutes, 0, 0);
+          // Keep if class hasn't ended yet (with 1hr buffer)
+          const diffMs = classEndTime.getTime() - new Date().getTime();
+          return diffMs >= -60 * 60 * 1000;
+        }
+      }
+      return true;
+    }
+    // Keep all future classes (Tomorrow, specific days)
+    // Filter out past dates by checking the date string
+    if (classItem.date) {
+      // date format: "DD/MM" - parse it
+      const [day, month] = classItem.date.split("/").map(Number);
+      if (day && month) {
+        const now = new Date();
+        const classDate = new Date(now.getFullYear(), month - 1, day);
+        // If classDate is in the past (before today), filter it out
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (classDate < today) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+
   // Check if user is currently punished (banned from live classes)
   const isPunished = user?.isPunished && user?.punishedUntil
     ? new Date(user.punishedUntil) > new Date()
@@ -39,12 +75,12 @@ export default function ClassesPage() {
 
   const punishedUntilFormatted = user?.punishedUntil
     ? new Date(user.punishedUntil).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : null;
 
   useEffect(() => {
@@ -172,9 +208,9 @@ export default function ClassesPage() {
         >
           <CalendarDays className="h-4 w-4" />
           My Schedule
-          {mySchedule.length > 0 && (
+          {upcomingSchedule.length > 0 && (
             <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-cyan-dark text-[10px] text-white">
-              {mySchedule.length}
+              {upcomingSchedule.length}
             </span>
           )}
         </button>
@@ -202,9 +238,9 @@ export default function ClassesPage() {
                   </h2>
                 </div>
 
-                {mySchedule.length > 0 ? (
+                {upcomingSchedule.length > 0 ? (
                   <div className="space-y-4">
-                    {mySchedule.map((classItem) => (
+                    {upcomingSchedule.map((classItem) => (
                       <motion.div
                         key={classItem.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -303,6 +339,19 @@ export default function ClassesPage() {
                               >
                                 Cancel
                               </motion.button>
+
+                              {classItem.materialsLink && (
+                                <motion.a
+                                  href={classItem.materialsLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
+                                >
+                                  📄 View Materials
+                                </motion.a>
+                              )}
                             </div>
                           </div>
                         </div>

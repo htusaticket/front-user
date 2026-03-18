@@ -1,7 +1,8 @@
 /**
- * Verifica si una clase está por comenzar (disponible para unirse)
- * El link de Join está disponible 10 minutos antes y hasta 1 hora después
- * Solo aplica para clases de HOY
+ * Verifica si una clase está disponible para unirse.
+ * El link de Join está disponible durante todo el día de la clase,
+ * desde el inicio del día hasta 1 hora después de que termine.
+ * Solo aplica para clases de HOY.
  */
 export function isClassStartingSoon(timeString: string, dayString?: string): boolean {
   // Solo mostrar "Join" para clases de hoy
@@ -10,25 +11,26 @@ export function isClassStartingSoon(timeString: string, dayString?: string): boo
   }
 
   // El timeString viene en formato "18:00 - 19:00" del backend
-  // Necesitamos extraer solo la hora de inicio
-  const startTimeStr = timeString.split(" - ")[0];
+  const parts = timeString.split(" - ");
+  const endTimeStr = parts[1] || parts[0];
   
-  if (!startTimeStr) return false;
+  if (!endTimeStr) return false;
 
-  // Crear un Date object para hoy con la hora de la clase
+  // Crear un Date object para hoy con la hora de fin de la clase
   const now = new Date();
-  const [hours, minutes] = startTimeStr.split(":").map(Number);
+  const [hours, minutes] = endTimeStr.split(":").map(Number);
   
   if (hours === undefined || minutes === undefined) return false;
 
-  const classTime = new Date();
-  classTime.setHours(hours, minutes, 0, 0);
+  const classEndTime = new Date();
+  classEndTime.setHours(hours, minutes, 0, 0);
 
-  const diffMs = classTime.getTime() - now.getTime();
+  // Disponible todo el día de hoy, hasta 1 hora después de que termine
+  const diffMs = classEndTime.getTime() - now.getTime();
   const diffMinutes = diffMs / (1000 * 60);
 
-  // Disponible si faltan 10 minutos o menos, pero no más de 1 hora después
-  return diffMinutes <= 10 && diffMinutes >= -60;
+  // Disponible si aún no ha pasado 1 hora desde el fin de la clase
+  return diffMinutes >= -60;
 }
 
 /**
