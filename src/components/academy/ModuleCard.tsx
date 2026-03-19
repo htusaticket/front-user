@@ -49,10 +49,10 @@ export function ModuleCard({ module, index = 0 }: ModuleCardProps) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg"
     >
       <Link href={href}>
-        {/* Image Section */}
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
-          {/* Overlay Gradient */}
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {/* Image Section - Compact */}
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-900">
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 z-10 bg-black/60" />
 
           {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,35 +63,27 @@ export function ModuleCard({ module, index = 0 }: ModuleCardProps) {
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
 
-          {/* Text Overlay on Image */}
-          <div className="absolute bottom-0 left-0 right-0 z-20 p-5">
-            <h3 className="font-display text-lg font-bold leading-tight text-white antialiased drop-shadow-sm">
+          {/* Centered Title on Image */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
+            <h3 className="text-center font-display text-xl font-extrabold uppercase leading-tight tracking-wide text-white antialiased drop-shadow-md">
               {module.title}
             </h3>
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="flex flex-1 flex-col p-5">
-          <div className="flex items-start justify-between">
-            <h4 className="font-display text-lg font-bold text-brand-primary transition-colors group-hover:text-brand-cyan-dark">
-              {module.title}
-            </h4>
-            <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-bold text-gray-600">
-              {module.totalLessons} Lessons
+        <div className="flex flex-1 flex-col p-4">
+          <h4 className="font-display text-sm font-bold text-gray-900 transition-colors group-hover:text-brand-cyan-dark">
+            {module.title}
+          </h4>
+
+          <p className="mt-1 line-clamp-2 text-xs text-gray-500">{module.description}</p>
+
+          <div className="mt-3">
+            <ProgressBar value={module.progress} size="sm" />
+            <span className="mt-1 inline-block text-xs font-bold text-brand-primary">
+              {module.progress}%
             </span>
-          </div>
-
-          <p className="mt-2 line-clamp-3 text-sm text-gray-600">{module.description}</p>
-
-          <div className="mt-6">
-            <div className="mb-1.5 flex items-center justify-between text-xs">
-              <span className="font-semibold text-gray-500">
-                {module.completedLessons} of {module.totalLessons} Completed
-              </span>
-              <span className="font-bold text-brand-primary">{module.progress}%</span>
-            </div>
-            <ProgressBar value={module.progress} size="md" />
           </div>
         </div>
       </Link>
