@@ -33,20 +33,14 @@ export function CardSkeleton({ className }: SkeletonProps) {
 export function ModuleCardSkeleton() {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <Skeleton className="h-48 w-full" />
-      <div className="p-5">
-        <div className="flex items-start justify-between">
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="mt-2 h-4 w-full" />
-        <Skeleton className="mt-1 h-4 w-5/6" />
-        <div className="mt-6">
-          <div className="mb-1.5 flex items-center justify-between">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-3 w-8" />
-          </div>
-          <Skeleton className="h-2.5 w-full rounded-full" />
+      <Skeleton className="aspect-[16/9] w-full" />
+      <div className="p-4">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="mt-1 h-3 w-full" />
+        <Skeleton className="mt-1 h-3 w-5/6" />
+        <div className="mt-3">
+          <Skeleton className="h-2 w-full rounded-full" />
+          <Skeleton className="mt-1 h-3 w-8" />
         </div>
       </div>
     </div>
