@@ -15,10 +15,14 @@ import {
   ArrowUpDown,
   Lock,
   Crown,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 
+import api from "@/lib/api";
 import { useJobsStore } from "@/store/jobs";
 import { useProfileStore } from "@/store/profile";
 import type { JobOffer, JobSortBy } from "@/types/jobs";
@@ -53,9 +57,24 @@ export default function JobsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isRequestingUpgrade, setIsRequestingUpgrade] = useState(false);
 
   // Check if user has access to job board
   const hasJobAccess = planFeatures.jobBoard;
+
+  const handleUpgradeRequest = useCallback(async () => {
+    setIsRequestingUpgrade(true);
+    try {
+      await api.post("/api/contact/upgrade");
+      toast.success("Upgrade request sent successfully! Our team will get back to you soon.");
+      setShowUpgradeModal(false);
+    } catch {
+      toast.error("Failed to send upgrade request. Please try again later.");
+    } finally {
+      setIsRequestingUpgrade(false);
+    }
+  }, []);
 
   // Fetch profile to get plan features
   useEffect(() => {
@@ -125,7 +144,7 @@ export default function JobsPage() {
     return (
       <div className="relative min-h-[600px]">
         {/* Blurred background content */}
-        <div className="pointer-events-none select-none blur-md">
+        <div className="pointer-events-none select-none blur-[2px]">
           <div className="space-y-8">
             {/* Header */}
             <div>
@@ -215,13 +234,13 @@ export default function JobsPage() {
               Upgrade your subscription to access exclusive job opportunities and start applying today.
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <a
-                href="mailto:support@highticketenglish.com?subject=Plan Upgrade Request"
+              <button
+                onClick={() => setShowUpgradeModal(true)}
                 className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-6 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-brand-cyan-dark/30"
               >
                 <Crown className="h-5 w-5" />
-                Contact to Upgrade
-              </a>
+                Request Upgrade
+              </button>
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-gray-500 hover:text-brand-cyan-dark"
@@ -231,6 +250,44 @@ export default function JobsPage() {
             </div>
           </motion.div>
         </div>
+
+        {/* Upgrade Confirmation Modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mx-4 max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+            >
+              <h3 className="mb-3 font-display text-lg font-bold text-brand-primary">
+                Confirm Upgrade Request
+              </h3>
+              <p className="mb-6 text-sm text-gray-600">
+                This will send an upgrade request to our team. Do you want to proceed?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  disabled={isRequestingUpgrade}
+                  className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpgradeRequest}
+                  disabled={isRequestingUpgrade}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-4 py-2.5 text-sm font-bold text-white transition-all hover:shadow-lg disabled:opacity-50"
+                >
+                  {isRequestingUpgrade ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Confirm"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     );
   }
@@ -525,10 +582,35 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
       </div>
       <p className="mb-2 text-sm font-semibold text-gray-700">{job.company}</p>
       <div className="space-y-1 text-xs text-gray-600">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-3.5 w-3.5" />
-          {job.location}
-        </div>
+        {job.social ? (
+          <a
+            href={job.social.startsWith("http") ? job.social : `https://${job.social}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 text-brand-cyan-dark hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Social
+          </a>
+        ) : job.location ? (
+          <div className="flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5" />
+            {job.location}
+          </div>
+        ) : null}
+        {job.website && (
+          <a
+            href={job.website.startsWith("http") ? job.website : `https://${job.website}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 text-brand-cyan-dark hover:underline"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            Website
+          </a>
+        )}
         <div className="flex items-center gap-2">
           <DollarSign className="h-3.5 w-3.5" />
           {job.oteMin && job.oteMax
@@ -580,10 +662,12 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
         </div>
 
         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-gray-400" />
-            <span>{job.location}</span>
-          </div>
+          {job.location && (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-gray-400" />
+              <span>{job.location}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-gray-400" />
             <span>{job.oteMin && job.oteMax
@@ -594,6 +678,29 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             <Briefcase className="h-4 w-4 text-gray-400" />
             <span>{job.type}</span>
           </div>
+          {job.social && (
+            <a
+              href={job.social.startsWith("http") ? job.social : `https://${job.social}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-brand-cyan-dark transition-colors hover:text-brand-cyan"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="underline">Social</span>
+            </a>
+          )}
+          {job.website && (
+            <a
+              href={job.website.startsWith("http") ? job.website : `https://${job.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-brand-cyan-dark transition-colors hover:text-brand-cyan"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="underline">{job.website.replace(/^https?:\/\//, "")}</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
         </div>
       </div>
 

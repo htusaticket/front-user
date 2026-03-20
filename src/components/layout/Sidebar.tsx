@@ -124,6 +124,7 @@ const SidebarContent = ({
       <nav className="flex-1 space-y-1.5">
         {filteredMenuItems.map((item) => {
           const isActive = pathname === item.href;
+
           return (
             <Link
               key={item.href}

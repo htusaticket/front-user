@@ -25,6 +25,9 @@ export interface JobOffer {
   requirements: string[];
   hasApplied: boolean;
   createdAt: string;
+  social?: string | null;
+  website?: string | null;
+  email?: string | null;
 }
 
 export interface JobFilters {
