@@ -12,13 +12,19 @@ import {
   Sparkles,
   LayoutGrid,
   CalendarDays,
+  Lock,
+  Crown,
+  Loader2 as Loader2Icon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import api from "@/lib/api";
 import { isClassStartingSoon, isLateCancellation } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useClassesStore } from "@/store/classes";
+import { useProfileStore } from "@/store/profile";
 import type { ClassSession } from "@/types/classes";
 
 export default function ClassesPage() {
@@ -146,6 +152,140 @@ export default function ClassesPage() {
       toast.error("Failed to cancel enrollment");
     }
   };
+
+  const { planFeatures, isLoading: isProfileLoading, fetchProfile } = useProfileStore();
+  const hasClassAccess = planFeatures.liveClasses;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isRequestingUpgrade, setIsRequestingUpgrade] = useState(false);
+
+  const handleUpgradeRequest = useCallback(async () => {
+    setIsRequestingUpgrade(true);
+    try {
+      await api.post("/api/contact/upgrade");
+      toast.success("Upgrade request sent! Our team will contact you soon.");
+      setShowUpgradeModal(false);
+    } catch {
+      toast.error("Failed to send upgrade request. Please try again.");
+    } finally {
+      setIsRequestingUpgrade(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Show locked view for users without live classes access
+  if (!hasClassAccess && !isProfileLoading) {
+    return (
+      <div className="relative min-h-[600px]">
+        {/* Blurred background content */}
+        <div className="pointer-events-none select-none blur-[2px]">
+          <div className="space-y-8 pb-10">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-brand-primary sm:text-3xl">
+                Live Classes & Workshops
+              </h1>
+              <p className="mt-2 text-base text-gray-600 sm:text-lg">
+                Browse upcoming live sessions and reserve your spot
+              </p>
+            </div>
+            {/* Placeholder class cards */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">CLASS</span>
+                  <h3 className="mt-3 text-lg font-bold text-gray-900">English Conversation</h3>
+                  <p className="mt-1 text-sm text-gray-500">Interactive session tailored for your level.</p>
+                  <div className="mt-4 space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Tomorrow</div>
+                    <div className="flex items-center gap-2"><Clock className="h-4 w-4" /> 09:00 - 10:30</div>
+                  </div>
+                  <button className="mt-4 w-full rounded-xl bg-brand-primary py-3 text-sm font-bold text-white">Book Class</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Overlay with upgrade message */}
+        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mx-4 max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-2xl"
+          >
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-cyan-dark to-brand-cyan">
+              <Lock className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-brand-primary">
+              Upgrade Your Plan
+            </h2>
+            <p className="mt-3 text-gray-600">
+              Live Classes are available for <strong>PRO</strong>, <strong>ELITE</strong>, and{" "}
+              <strong>LEVEL UP</strong> plans.
+            </p>
+            <p className="mt-2 text-sm text-gray-500">
+              Upgrade your subscription to join live sessions with expert instructors.
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-6 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-brand-cyan-dark/30"
+              >
+                <Crown className="h-5 w-5" />
+                Request Upgrade
+              </button>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-gray-500 hover:text-brand-cyan-dark"
+              >
+                Return to Dashboard
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Upgrade Confirmation Modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mx-4 max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+            >
+              <h3 className="mb-3 font-display text-lg font-bold text-brand-primary">
+                Confirm Upgrade Request
+              </h3>
+              <p className="mb-6 text-sm text-gray-600">
+                This will send an upgrade request to our team. Do you want to proceed?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  disabled={isRequestingUpgrade}
+                  className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpgradeRequest}
+                  disabled={isRequestingUpgrade}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-4 py-2.5 text-sm font-bold text-white hover:shadow-lg disabled:opacity-50"
+                >
+                  {isRequestingUpgrade ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Confirm"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10">
