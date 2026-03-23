@@ -20,19 +20,23 @@ import { toast } from "sonner";
 import { isClassStartingSoon, formatRelativeTime } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useDashboardStore } from "@/store/dashboard";
+import { useProfileStore } from "@/store/profile";
 import type { NotificationType } from "@/types/dashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { data, fetchDashboard } = useDashboardStore();
+  const { planFeatures, fetchProfile } = useProfileStore();
+  const hasClassAccess = planFeatures.liveClasses;
 
   useEffect(() => {
+    fetchProfile();
     fetchDashboard().catch((err) => {
       toast.error("Error loading dashboard data");
       console.error(err);
     });
-  }, [fetchDashboard]);
+  }, [fetchDashboard, fetchProfile]);
 
   // Get notification icon based on type
   const getNotificationIcon = (type: NotificationType) => {
@@ -89,7 +93,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col lg:col-span-2"
         >
-          {data?.nextClass ? (
+          {data?.nextClass && hasClassAccess ? (
             <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
               {/* Header cyan */}
               <div className="bg-brand-cyan-dark px-4 py-3 sm:px-6 sm:py-4">

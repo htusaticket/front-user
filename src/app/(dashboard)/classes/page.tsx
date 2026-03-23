@@ -3,6 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Users,
   Video,
@@ -17,7 +19,7 @@ import {
   Loader2 as Loader2Icon,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
@@ -32,6 +34,8 @@ export default function ClassesPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
   const [willApplyStrike, setWillApplyStrike] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   const { availableClasses, mySchedule, isLoading, fetchAvailableClasses,
     fetchMySchedule, enrollInClass, cancelEnrollment } = useClassesStore();
@@ -73,6 +77,20 @@ export default function ClassesPage() {
     }
     return true;
   });
+
+  // Pagination for available classes
+  const paginatedAvailable = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return availableClasses.slice(start, start + ITEMS_PER_PAGE);
+  }, [availableClasses, currentPage]);
+  const totalAvailablePages = Math.max(1, Math.ceil(availableClasses.length / ITEMS_PER_PAGE));
+
+  // Pagination for booked classes
+  const paginatedSchedule = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return upcomingSchedule.slice(start, start + ITEMS_PER_PAGE);
+  }, [upcomingSchedule, currentPage]);
+  const totalSchedulePages = Math.max(1, Math.ceil(upcomingSchedule.length / ITEMS_PER_PAGE));
 
   // Check if user is currently punished (banned from live classes)
   const isPunished = user?.isPunished && user?.punishedUntil
@@ -328,7 +346,7 @@ export default function ClassesPage() {
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-200">
         <button
-          onClick={() => setActiveTab("available")}
+          onClick={() => { setActiveTab("available"); setCurrentPage(1); }}
           className={`flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all ${
             activeTab === "available"
               ? "border-brand-primary text-brand-primary"
@@ -339,7 +357,7 @@ export default function ClassesPage() {
           Browse Sessions
         </button>
         <button
-          onClick={() => setActiveTab("booked")}
+          onClick={() => { setActiveTab("booked"); setCurrentPage(1); }}
           className={`relative flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-all ${
             activeTab === "booked"
               ? "border-brand-primary text-brand-primary"
@@ -379,125 +397,148 @@ export default function ClassesPage() {
                 </div>
 
                 {upcomingSchedule.length > 0 ? (
-                  <div className="space-y-4">
-                    {upcomingSchedule.map((classItem) => (
-                      <motion.div
-                        key={classItem.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="overflow-hidden rounded-2xl border-2 border-brand-cyan-dark bg-white shadow-lg transition-all hover:shadow-md"
-                      >
-                        <div className="bg-brand-cyan-dark px-4 py-3 sm:px-6">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-white" />
-                            <span className="text-sm font-bold uppercase tracking-wider text-white">
+                  <>
+                    <div className="space-y-4">
+                      {paginatedSchedule.map((classItem) => (
+                        <motion.div
+                          key={classItem.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="overflow-hidden rounded-2xl border-2 border-brand-cyan-dark bg-white shadow-lg transition-all hover:shadow-md"
+                        >
+                          <div className="bg-brand-cyan-dark px-4 py-3 sm:px-6">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-5 w-5 text-white" />
+                              <span className="text-sm font-bold uppercase tracking-wider text-white">
                               Enrolled
-                            </span>
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="p-4 sm:p-6">
-                          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <h3 className="font-display text-lg font-bold text-brand-primary sm:text-xl">
-                                  {classItem.title}
-                                </h3>
-                                {classItem.type === "workshop" && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-bold text-brand-primary">
-                                    <Sparkles className="h-3 w-3" />
+                          <div className="p-4 sm:p-6">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <h3 className="font-display text-lg font-bold text-brand-primary sm:text-xl">
+                                    {classItem.title}
+                                  </h3>
+                                  {classItem.type === "workshop" && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-bold text-brand-primary">
+                                      <Sparkles className="h-3 w-3" />
                                     Workshop
-                                  </span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="mt-1 text-sm text-gray-500">
+                                  {classItem.description}
+                                </p>
+
+                                <div className="mt-4 flex flex-wrap gap-4">
+                                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
+                                      <Calendar className="h-4 w-4 text-brand-cyan-dark" />
+                                    </div>
+                                    <span className="font-semibold">
+                                      {classItem.day}, {classItem.date}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
+                                      <Clock className="h-4 w-4 text-brand-cyan-dark" />
+                                    </div>
+                                    <span>{classItem.time}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
+                                {isPunished ? (
+                                  <div
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
+                                    title={`Access restricted until ${punishedUntilFormatted}`}
+                                  >
+                                    <ShieldAlert className="h-4 w-4" />
+                                  Access Restricted
+                                  </div>
+                                ) : classItem.meetLink ? (
+                                  <motion.a
+                                    href={classItem.meetLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all ${
+                                      isClassStartingSoon(classItem.time, classItem.day)
+                                        ? "bg-brand-cyan-dark shadow-brand-cyan-dark/30 hover:bg-brand-cyan animate-pulse"
+                                        : "bg-brand-cyan-dark/80 shadow-brand-cyan-dark/20 hover:bg-brand-cyan-dark"
+                                    }`}
+                                  >
+                                    <Video className="h-4 w-4" />
+                                    {isClassStartingSoon(classItem.time, classItem.day) ? "Join Class Now" : "Class Link"}
+                                  </motion.a>
+                                ) : (
+                                  <button
+                                    disabled
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-gray-400 cursor-not-allowed"
+                                  >
+                                    <Video className="h-4 w-4" />
+                                  Link available soon
+                                  </button>
+                                )}
+
+                                <motion.button
+                                  onClick={() => handleCancelClick(classItem)}
+                                  whileHover={{
+                                    scale: 1.02,
+                                    backgroundColor: "#FEF2F2",
+                                    borderColor: "#FCA5A5",
+                                  }}
+                                  whileTap={{ scale: 0.98 }}
+                                  className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
+                                >
+                                Cancel
+                                </motion.button>
+
+                                {classItem.materialsLink && (
+                                  <motion.a
+                                    href={classItem.materialsLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
+                                  >
+                                  📄 View Materials
+                                  </motion.a>
                                 )}
                               </div>
-
-                              <p className="mt-1 text-sm text-gray-500">
-                                {classItem.description}
-                              </p>
-
-                              <div className="mt-4 flex flex-wrap gap-4">
-                                <div className="flex items-center gap-2 text-sm text-gray-700">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
-                                    <Calendar className="h-4 w-4 text-brand-cyan-dark" />
-                                  </div>
-                                  <span className="font-semibold">
-                                    {classItem.day}, {classItem.date}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-700">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
-                                    <Clock className="h-4 w-4 text-brand-cyan-dark" />
-                                  </div>
-                                  <span>{classItem.time}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                              {isPunished ? (
-                                <div
-                                  className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
-                                  title={`Access restricted until ${punishedUntilFormatted}`}
-                                >
-                                  <ShieldAlert className="h-4 w-4" />
-                                  Access Restricted
-                                </div>
-                              ) : classItem.meetLink ? (
-                                <motion.a
-                                  href={classItem.meetLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all ${
-                                    isClassStartingSoon(classItem.time, classItem.day)
-                                      ? "bg-brand-cyan-dark shadow-brand-cyan-dark/30 hover:bg-brand-cyan animate-pulse"
-                                      : "bg-brand-cyan-dark/80 shadow-brand-cyan-dark/20 hover:bg-brand-cyan-dark"
-                                  }`}
-                                >
-                                  <Video className="h-4 w-4" />
-                                  {isClassStartingSoon(classItem.time, classItem.day) ? "Join Class Now" : "Class Link"}
-                                </motion.a>
-                              ) : (
-                                <button
-                                  disabled
-                                  className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-gray-400 cursor-not-allowed"
-                                >
-                                  <Video className="h-4 w-4" />
-                                  Link available soon
-                                </button>
-                              )}
-
-                              <motion.button
-                                onClick={() => handleCancelClick(classItem)}
-                                whileHover={{
-                                  scale: 1.02,
-                                  backgroundColor: "#FEF2F2",
-                                  borderColor: "#FCA5A5",
-                                }}
-                                whileTap={{ scale: 0.98 }}
-                                className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
-                              >
-                                Cancel
-                              </motion.button>
-
-                              {classItem.materialsLink && (
-                                <motion.a
-                                  href={classItem.materialsLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
-                                >
-                                  📄 View Materials
-                                </motion.a>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                    {totalSchedulePages > 1 && (
+                      <div className="mt-6 flex items-center justify-center gap-4">
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                        >
+                          <ChevronLeft className="h-4 w-4" /> Previous
+                        </button>
+                        <span className="text-sm font-medium text-gray-700">
+                        Page {currentPage} of {totalSchedulePages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(totalSchedulePages, p + 1))}
+                          disabled={currentPage === totalSchedulePages}
+                          className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                        >
+                        Next <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
                     <Calendar className="mb-3 h-10 w-10 text-gray-300" />
@@ -537,7 +578,7 @@ export default function ClassesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {availableClasses.map((classItem) => {
+                  {paginatedAvailable.map((classItem) => {
                     const isUnlimited = classItem.capacity.max === null;
 
                     const typeBadge = (() => {
@@ -681,6 +722,27 @@ export default function ClassesPage() {
                     );
                   })}
                 </div>
+                {totalAvailablePages > 1 && (
+                  <div className="mt-6 flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-4 w-4" /> Previous
+                    </button>
+                    <span className="text-sm font-medium text-gray-700">
+                      Page {currentPage} of {totalAvailablePages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalAvailablePages, p + 1))}
+                      disabled={currentPage === totalAvailablePages}
+                      className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      Next <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </section>
             </motion.div>
           )}
