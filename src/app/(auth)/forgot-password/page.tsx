@@ -142,11 +142,11 @@ export default function ForgotPassword() {
             </svg>
           </div>
           <h3 className="mb-2 text-lg font-bold text-green-800">
-            ¡Correo de recuperación enviado!
+            ¡Solicitud enviada!
           </h3>
           <p className="mb-6 text-sm text-green-700">
-            Hemos enviado las instrucciones a <strong>{email}</strong>. Revisa
-            tu bandeja de entrada y también la carpeta de spam.
+            Si el correo <strong>{email}</strong> se encuentra registrado, recibirás
+            las instrucciones para recuperar tu contraseña. Revisa tu bandeja de entrada y también la carpeta de spam.
           </p>
           <Link
             href="/login"

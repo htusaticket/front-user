@@ -126,6 +126,15 @@ export default function JobsPage() {
     return SORT_OPTIONS.find(o => o.value === filters.sortBy)?.label || "Best Match";
   }, [filters.sortBy]);
 
+  // Build dynamic type options from loaded jobs
+  const typeOptions = useMemo(() => {
+    const types = new Set<string>();
+    jobs.forEach(job => {
+      if (job.type) types.add(job.type);
+    });
+    return Array.from(types).sort();
+  }, [jobs]);
+
   // Filter jobs locally based on current filters
   const filteredJobs = useMemo(() => {
     return jobs;
@@ -412,26 +421,19 @@ export default function JobsPage() {
               >
                 All Types
               </button>
-              <button
-                onClick={() => handleFilterByType("Full-time")}
-                className={`w-full rounded-lg px-4 py-2 text-left text-sm transition-colors ${
-                  filters.type === "Full-time"
-                    ? "bg-brand-cyan-dark/10 font-semibold text-brand-cyan-dark"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Full-time
-              </button>
-              <button
-                onClick={() => handleFilterByType("Part-time")}
-                className={`w-full rounded-lg px-4 py-2 text-left text-sm transition-colors ${
-                  filters.type === "Part-time"
-                    ? "bg-brand-cyan-dark/10 font-semibold text-brand-cyan-dark"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Part-time
-              </button>
+              {typeOptions.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => handleFilterByType(type)}
+                  className={`w-full rounded-lg px-4 py-2 text-left text-sm transition-colors ${
+                    filters.type === type
+                      ? "bg-brand-cyan-dark/10 font-semibold text-brand-cyan-dark"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
             </motion.div>
           )}
         </div>
@@ -615,7 +617,7 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
           <DollarSign className="h-3.5 w-3.5" />
           {job.oteMin && job.oteMax
             ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
-            : job.salaryRange || "Not specified"}
+            : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}
         </div>
       </div>
       <div className="mt-3">
@@ -672,7 +674,7 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             <DollarSign className="h-4 w-4 text-gray-400" />
             <span>{job.oteMin && job.oteMax
               ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
-              : job.salaryRange || "Not specified"}</span>
+              : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}</span>
           </div>
           <div className="flex items-center gap-2">
             <Briefcase className="h-4 w-4 text-gray-400" />

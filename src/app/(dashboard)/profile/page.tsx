@@ -140,7 +140,9 @@ export default function ProfilePage() {
           </div>
           <p className="text-sm font-medium opacity-90">Subscription</p>
           <p className="mt-1 font-display text-2xl font-bold">
-            {subscription?.plan || "Loading..."}
+            {subscription?.plan
+              ? subscription.plan.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bPro\b/i, "PRO")
+              : "Loading..."}
           </p>
           <p className="mt-2 text-xs opacity-75">
             Member since {subscription?.memberSince || "..."}
