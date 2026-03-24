@@ -175,11 +175,28 @@ export default function ClassesPage() {
   const hasClassAccess = planFeatures.liveClasses;
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isRequestingUpgrade, setIsRequestingUpgrade] = useState(false);
+  const [hasRequestedUpgrade, setHasRequestedUpgrade] = useState(false);
+
+  // Check if user has already requested upgrade (from sessionStorage, per-user + plan key)
+  // Key includes plan info so it auto-resets when subscription situation changes
+  const { subscription: subInfo } = useProfileStore();
+  const planKey = subInfo?.plan ? `${subInfo.plan}_${subInfo.hasActiveSubscription ? "active" : "expired"}` : "noplan";
+  const storageKey = user?.id ? `upgrade_requested_${user.id}_${planKey}` : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const requested = sessionStorage.getItem(storageKey);
+    if (requested === "true") {
+      setHasRequestedUpgrade(true);
+    }
+  }, [storageKey]);
 
   const handleUpgradeRequest = useCallback(async () => {
     setIsRequestingUpgrade(true);
     try {
       await api.post("/api/contact/upgrade");
+      setHasRequestedUpgrade(true);
+      if (storageKey) sessionStorage.setItem(storageKey, "true");
       toast.success("Upgrade request sent! Our team will contact you soon.");
       setShowUpgradeModal(false);
     } catch {
@@ -187,7 +204,7 @@ export default function ClassesPage() {
     } finally {
       setIsRequestingUpgrade(false);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     fetchProfile();
@@ -247,13 +264,25 @@ export default function ClassesPage() {
               Upgrade your subscription to join live sessions with expert instructors.
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-6 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-brand-cyan-dark/30"
-              >
-                <Crown className="h-5 w-5" />
-                Request Upgrade
-              </button>
+              {hasRequestedUpgrade ? (
+                <div className="rounded-xl bg-green-50 border border-green-200 py-3 px-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-green-700 font-semibold">
+                    <CheckCircle className="h-5 w-5" />
+                    ¡Solicitud de upgrade enviada!
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    Nuestro equipo se pondrá en contacto contigo pronto.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-cyan-dark to-brand-cyan px-6 py-3 font-bold text-white transition-all hover:shadow-lg hover:shadow-brand-cyan-dark/30"
+                >
+                  <Crown className="h-5 w-5" />
+                  Request Upgrade
+                </button>
+              )}
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-gray-500 hover:text-brand-cyan-dark"
