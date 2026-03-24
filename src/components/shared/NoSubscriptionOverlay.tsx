@@ -34,27 +34,34 @@ export function NoSubscriptionOverlay() {
     return () => clearTimeout(hideTimer);
   }, [shouldShowOverlay]);
 
-  // Check if user has already requested (from sessionStorage)
+  // Check if user has already requested (from sessionStorage, per-user + plan key)
+  // Key includes plan+status so it auto-resets when subscription situation changes
+  const planKey = subscription?.plan && subscription?.hasActiveSubscription !== undefined
+    ? `${subscription.plan}_${subscription.hasActiveSubscription ? "active" : "expired"}`
+    : "noplan";
+  const storageKey = user?.id ? `upgrade_requested_${user.id}_${planKey}` : null;
+
   useEffect(() => {
-    const requested = sessionStorage.getItem("upgrade_requested");
+    if (!storageKey) return;
+    const requested = sessionStorage.getItem(storageKey);
     if (requested === "true") {
       setHasRequested(true);
     }
-  }, []);
+  }, [storageKey]);
 
   const handleUpgradeRequest = useCallback(async () => {
     setIsRequesting(true);
     try {
       await api.post("/api/contact/upgrade");
       setHasRequested(true);
-      sessionStorage.setItem("upgrade_requested", "true");
+      if (storageKey) sessionStorage.setItem(storageKey, "true");
       toast.success("¡Solicitud enviada! Nuestro equipo se pondrá en contacto contigo pronto.");
     } catch {
       toast.error("Error al enviar la solicitud. Inténtalo de nuevo más tarde.");
     } finally {
       setIsRequesting(false);
     }
-  }, []);
+  }, [storageKey]);
 
   const handleLogout = useCallback(() => {
     logout();
