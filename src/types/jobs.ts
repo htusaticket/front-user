@@ -26,6 +26,7 @@ export interface JobOffer {
   hasApplied: boolean;
   createdAt: string;
   social?: string | null;
+  recruiterSocial?: string | null;
   website?: string | null;
   email?: string | null;
 }

@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import {
   Briefcase,
-  DollarSign,
   MapPin,
   Building,
   Filter,
@@ -630,6 +629,18 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
             {job.location}
           </div>
         ) : null}
+        {job.recruiterSocial && (
+          <a
+            href={job.recruiterSocial.startsWith("http") ? job.recruiterSocial : `https://${job.recruiterSocial}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 text-purple-600 hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Recruiter
+          </a>
+        )}
         {job.website && (
           <a
             href={job.website.startsWith("http") ? job.website : `https://${job.website}`}
@@ -643,7 +654,6 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
           </a>
         )}
         <div className="flex items-center gap-2">
-          <DollarSign className="h-3.5 w-3.5" />
           {job.oteMin && job.oteMax
             ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
             : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}
@@ -700,7 +710,6 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             </div>
           )}
           <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-gray-400" />
             <span>{job.oteMin && job.oteMax
               ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
               : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}</span>
@@ -718,6 +727,17 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             >
               <ExternalLink className="h-4 w-4" />
               <span className="underline">Social</span>
+            </a>
+          )}
+          {job.recruiterSocial && (
+            <a
+              href={job.recruiterSocial.startsWith("http") ? job.recruiterSocial : `https://${job.recruiterSocial}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-purple-600 transition-colors hover:text-purple-500"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span className="underline">Recruiter Social</span>
             </a>
           )}
           {job.website && (

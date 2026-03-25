@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "High Ticket USA",
   description: "Learn English with High Ticket USA - Your path to fluency",
   icons: {
-    icon: "https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png",
+    icon: "/HT_USA_Logo-lau.png",
   },
 };
 
