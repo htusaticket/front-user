@@ -29,12 +29,51 @@ import { useClassesStore } from "@/store/classes";
 import { useProfileStore } from "@/store/profile";
 import type { ClassSession } from "@/types/classes";
 
+// Helper to detect if a class has already ended
+const MONTH_MAP: Record<string, number> = {
+  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+};
+
+function isClassPast(classItem: ClassSession): boolean {
+  if (classItem.day === "Tomorrow") return false;
+  if (classItem.day === "Today") {
+    const endTimeStr = classItem.time.split(" - ")[1];
+    if (endTimeStr) {
+      const [hours, minutes] = endTimeStr.split(":").map(Number);
+      if (hours !== undefined && minutes !== undefined) {
+        const classEndTime = new Date();
+        classEndTime.setHours(hours, minutes, 0, 0);
+        return classEndTime.getTime() < Date.now();
+      }
+    }
+    return false;
+  }
+  // Parse date like "Mar 25"
+  if (classItem.date) {
+    const parts = classItem.date.split(" ");
+    if (parts.length === 2) {
+      const month = MONTH_MAP[parts[0]];
+      const day = parseInt(parts[1]);
+      if (month !== undefined && !isNaN(day)) {
+        const now = new Date();
+        const classDate = new Date(now.getFullYear(), month, day, 23, 59, 59);
+        return classDate < now;
+      }
+    }
+  }
+  return false;
+}
+
 export default function ClassesPage() {
   const [activeTab, setActiveTab] = useState<"available" | "booked">("available");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
   const [willApplyStrike, setWillApplyStrike] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showMaterialsModal, setShowMaterialsModal] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [selectedMaterialsTitle, setSelectedMaterialsTitle] = useState("");
   const ITEMS_PER_PAGE = 12;
 
   const { availableClasses, mySchedule, isLoading, fetchAvailableClasses,
@@ -42,41 +81,10 @@ export default function ClassesPage() {
 
   const user = useAuthStore((state) => state.user);
 
-  // Filter out past classes from mySchedule
-  const upcomingSchedule = mySchedule.filter((classItem) => {
-    // If the class day is "Today", check if the time has passed
-    if (classItem.day === "Today") {
-      const endTimeStr = classItem.time.split(" - ")[1];
-      if (endTimeStr) {
-        const [hours, minutes] = endTimeStr.split(":").map(Number);
-        if (hours !== undefined && minutes !== undefined) {
-          const classEndTime = new Date();
-          classEndTime.setHours(hours, minutes, 0, 0);
-          // Keep if class hasn't ended yet (with 1hr buffer)
-          const diffMs = classEndTime.getTime() - new Date().getTime();
-          return diffMs >= -60 * 60 * 1000;
-        }
-      }
-      return true;
-    }
-    // Keep all future classes (Tomorrow, specific days)
-    // Filter out past dates by checking the date string
-    if (classItem.date) {
-      // date format: "DD/MM" - parse it
-      const [day, month] = classItem.date.split("/").map(Number);
-      if (day && month) {
-        const now = new Date();
-        const classDate = new Date(now.getFullYear(), month - 1, day);
-        // If classDate is in the past (before today), filter it out
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (classDate < today) {
-          return false;
-        }
-      }
-    }
-    return true;
-  });
+  // Keep all enrolled classes (past + upcoming) for My Schedule
+  const allSchedule = mySchedule;
+  // Count only upcoming for the badge
+  const upcomingCount = mySchedule.filter(c => !isClassPast(c)).length;
 
   // Pagination for available classes
   const paginatedAvailable = useMemo(() => {
@@ -85,12 +93,12 @@ export default function ClassesPage() {
   }, [availableClasses, currentPage]);
   const totalAvailablePages = Math.max(1, Math.ceil(availableClasses.length / ITEMS_PER_PAGE));
 
-  // Pagination for booked classes
+  // Pagination for booked classes (shows all including past)
   const paginatedSchedule = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return upcomingSchedule.slice(start, start + ITEMS_PER_PAGE);
-  }, [upcomingSchedule, currentPage]);
-  const totalSchedulePages = Math.max(1, Math.ceil(upcomingSchedule.length / ITEMS_PER_PAGE));
+    return allSchedule.slice(start, start + ITEMS_PER_PAGE);
+  }, [allSchedule, currentPage]);
+  const totalSchedulePages = Math.max(1, Math.ceil(allSchedule.length / ITEMS_PER_PAGE));
 
   // Check if user is currently punished (banned from live classes)
   const isPunished = user?.isPunished && user?.punishedUntil
@@ -395,9 +403,9 @@ export default function ClassesPage() {
         >
           <CalendarDays className="h-4 w-4" />
           My Schedule
-          {upcomingSchedule.length > 0 && (
+          {upcomingCount > 0 && (
             <span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-cyan-dark text-[10px] text-white">
-              {upcomingSchedule.length}
+              {upcomingCount}
             </span>
           )}
         </button>
@@ -425,7 +433,7 @@ export default function ClassesPage() {
                   </h2>
                 </div>
 
-                {upcomingSchedule.length > 0 ? (
+                {allSchedule.length > 0 ? (
                   <>
                     <div className="space-y-4">
                       {paginatedSchedule.map((classItem) => (
@@ -481,7 +489,13 @@ export default function ClassesPage() {
                               </div>
 
                               <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                                {isPunished ? (
+                                {isClassPast(classItem) ? (
+                                  /* Past class - show "Class Ended" badge, no action buttons */
+                                  <div className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 border-2 border-gray-200 px-6 py-3 text-sm font-bold text-gray-400 cursor-default">
+                                    <CheckCircle className="h-4 w-4" />
+                                    Class Ended
+                                  </div>
+                                ) : isPunished ? (
                                   <div
                                     className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
                                     title={`Access restricted until ${punishedUntilFormatted}`}
@@ -515,30 +529,43 @@ export default function ClassesPage() {
                                   </button>
                                 )}
 
-                                <motion.button
-                                  onClick={() => handleCancelClick(classItem)}
-                                  whileHover={{
-                                    scale: 1.02,
-                                    backgroundColor: "#FEF2F2",
-                                    borderColor: "#FCA5A5",
-                                  }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
-                                >
-                                Cancel
-                                </motion.button>
+                                {/* Hide Cancel button for past classes */}
+                                {!isClassPast(classItem) && (
+                                  <motion.button
+                                    onClick={() => handleCancelClick(classItem)}
+                                    whileHover={{
+                                      scale: 1.02,
+                                      backgroundColor: "#FEF2F2",
+                                      borderColor: "#FCA5A5",
+                                    }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
+                                  >
+                                  Cancel
+                                  </motion.button>
+                                )}
 
                                 {classItem.materialsLink && (
-                                  <motion.a
-                                    href={classItem.materialsLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <motion.button
+                                    onClick={() => {
+                                      const links = classItem.materialsLink!
+                                        .split(/[,\n;]+/)
+                                        .map(l => l.trim())
+                                        .filter(Boolean);
+                                      if (links.length === 1) {
+                                        window.open(links[0], "_blank");
+                                      } else {
+                                        setSelectedMaterials(links);
+                                        setSelectedMaterialsTitle(classItem.title);
+                                        setShowMaterialsModal(true);
+                                      }
+                                    }}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
                                   >
                                   📄 View Materials
-                                  </motion.a>
+                                  </motion.button>
                                 )}
                               </div>
                             </div>
@@ -852,6 +879,74 @@ export default function ClassesPage() {
                   {isLoading ? "Canceling..." : "Confirm Cancel"}
                 </motion.button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Materials Modal */}
+      {showMaterialsModal && selectedMaterials.length > 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => setShowMaterialsModal(false)}
+          role="dialog"
+          tabIndex={-1}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-brand-cyan-dark/5 border-b border-gray-100 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-brand-primary">
+                    Class Materials
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-0.5">{selectedMaterialsTitle}</p>
+                </div>
+                <button
+                  onClick={() => setShowMaterialsModal(false)}
+                  className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+                >
+                  <AlertCircle className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-3 max-h-80 overflow-y-auto">
+              {selectedMaterials.map((link, idx) => {
+                const fileName = link.split("/").pop()?.split("?")[0] || `Material ${idx + 1}`;
+                const isUrl = link.startsWith("http");
+                return (
+                  <a
+                    key={`material-${idx}`}
+                    href={isUrl ? link : `https://${link}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm transition-all hover:border-brand-cyan-dark hover:bg-brand-cyan-dark/5 hover:shadow-sm group"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-cyan-dark/10 text-brand-cyan-dark group-hover:bg-brand-cyan-dark group-hover:text-white transition-colors">
+                      📄
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{fileName}</p>
+                      <p className="text-xs text-gray-400 truncate">{link}</p>
+                    </div>
+                    <span className="text-brand-cyan-dark text-xs font-bold group-hover:underline shrink-0">
+                      Open →
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+            <div className="border-t border-gray-100 px-6 py-3 bg-gray-50">
+              <button
+                onClick={() => setShowMaterialsModal(false)}
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </motion.div>
         </div>
