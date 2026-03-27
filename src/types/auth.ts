@@ -9,7 +9,7 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
-export type UserPlan = "PRO" | "ELITE" | "LEVEL_UP" | "HIRING_HUB" | "SKILL_BUILDER";
+export type UserPlan = "PRO" | "ELITE" | "LEVEL_UP" | "HIRING_HUB" | "SKILL_BUILDER" | "SKILL_BUILDER_LIVE";
 
 export interface User {
   id: string;

@@ -57,6 +57,7 @@ const getPlanLabel = (plan: UserPlan | null | undefined): string => {
     LEVEL_UP: "Level Up",
     HIRING_HUB: "Hiring Hub",
     SKILL_BUILDER: "Skill Builder",
+    SKILL_BUILDER_LIVE: "Skill Builder Live",
   };
   
   return labels[plan] || "";
