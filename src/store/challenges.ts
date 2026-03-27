@@ -86,8 +86,12 @@ export const useChallengesStore = create<ChallengesStore>((set, get) => ({
     
     try {
       const response = await api.get("/api/challenges/daily");
+      const rawData = response.data;
+      // Use nullish coalescing so that null (no challenge) is preserved
+      // instead of falling through to the wrapper object
+      const challengeData = rawData?.data !== undefined ? rawData.data : rawData;
       set({ 
-        dailyChallenge: response.data.data || response.data, 
+        dailyChallenge: challengeData ?? null, 
         isLoadingDaily: false,
         quizAnswers: new Map(), // Reset answers when fetching new challenge
         quizResult: null,

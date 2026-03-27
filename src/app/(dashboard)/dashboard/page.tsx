@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { data, fetchDashboard } = useDashboardStore();
   const { planFeatures, fetchProfile } = useProfileStore();
-  const hasClassAccess = planFeatures.liveClasses;
+  const hasClassAccess = planFeatures?.liveClasses ?? false;
 
   useEffect(() => {
     fetchProfile();

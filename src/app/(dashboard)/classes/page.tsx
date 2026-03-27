@@ -180,7 +180,7 @@ export default function ClassesPage() {
   };
 
   const { planFeatures, isLoading: isProfileLoading, fetchProfile } = useProfileStore();
-  const hasClassAccess = planFeatures.liveClasses;
+  const hasClassAccess = planFeatures?.liveClasses ?? false;
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isRequestingUpgrade, setIsRequestingUpgrade] = useState(false);
   const [hasRequestedUpgrade, setHasRequestedUpgrade] = useState(false);
@@ -264,11 +264,7 @@ export default function ClassesPage() {
             <h2 className="font-display text-2xl font-bold text-brand-primary">
               Upgrade Your Plan
             </h2>
-            <p className="mt-3 text-gray-600">
-              Live Classes are available for <strong>PRO</strong>, <strong>ELITE</strong>, and{" "}
-              <strong>LEVEL UP</strong> plans.
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-3 text-sm text-gray-500">
               Upgrade your subscription to join live sessions with expert instructors.
             </p>
             <div className="mt-6 flex flex-col gap-3">
@@ -276,10 +272,10 @@ export default function ClassesPage() {
                 <div className="rounded-xl bg-green-50 border border-green-200 py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-2 text-green-700 font-semibold">
                     <CheckCircle className="h-5 w-5" />
-                    ¡Solicitud de upgrade enviada!
+                    Upgrade request sent
                   </div>
                   <p className="text-xs text-green-600 mt-1">
-                    Nuestro equipo se pondrá en contacto contigo pronto.
+                    We will reach out shortly with next steps.
                   </p>
                 </div>
               ) : (
@@ -920,7 +916,7 @@ export default function ClassesPage() {
                 const isUrl = link.startsWith("http");
                 return (
                   <a
-                    key={`material-${idx}`}
+                    key={link}
                     href={isUrl ? link : `https://${link}`}
                     target="_blank"
                     rel="noopener noreferrer"

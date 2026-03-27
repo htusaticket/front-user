@@ -67,7 +67,7 @@ const SidebarContent = ({
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }) => {
-  // Filter menu items based on system settings
+  // Filter menu items based on system settings (global admin toggles only)
   const filteredMenuItems = menuItems.filter((item) => {
     // Hide Jobs if globally disabled by admin
     if (item.key === "jobs" && !systemSettings.jobBoardEnabled) {

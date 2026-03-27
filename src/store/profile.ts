@@ -57,17 +57,17 @@ const initialProfileState: ProfileState = {
   isPunished: false,
   punishedUntil: null,
   planFeatures: {
-    academy: true,
-    challenges: true,
-    liveClasses: true,
-    jobBoard: true,
+    academy: false,
+    challenges: false,
+    liveClasses: false,
+    jobBoard: false,
   },
   systemSettings: {
     strikesEnabled: false,
     jobBoardEnabled: true,
     academyEnabled: true,
   },
-  isLoading: false,
+  isLoading: true,
   isSaving: false,
   error: null,
 };
@@ -89,8 +89,8 @@ export const useProfileStore = create<ProfileStore>((set) => ({
         strikes: data.strikes,
         isPunished: data.isPunished,
         punishedUntil: data.punishedUntil,
-        planFeatures: data.planFeatures,
-        systemSettings: data.systemSettings,
+        planFeatures: data.planFeatures ?? initialProfileState.planFeatures,
+        systemSettings: data.systemSettings ?? initialProfileState.systemSettings,
         isLoading: false,
       });
     } catch (error) {
