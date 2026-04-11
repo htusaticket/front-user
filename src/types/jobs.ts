@@ -29,6 +29,7 @@ export interface JobOffer {
   recruiterSocial?: string | null;
   website?: string | null;
   email?: string | null;
+  code?: string | null;
 }
 
 export interface JobFilters {
