@@ -195,7 +195,8 @@ export default function LessonPage() {
                   {currentLesson.title}
                 </h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  {currentLesson.module.title} • {currentLesson.duration}
+                  {currentLesson.module.title}
+                  {currentLesson.duration ? ` • ${currentLesson.duration} min` : ""}
                 </p>
               </div>
               <button

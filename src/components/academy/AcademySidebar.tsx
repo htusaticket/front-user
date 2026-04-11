@@ -233,7 +233,7 @@ function LessonItem({ lesson, index, isActive, onSelect }: LessonItemProps) {
         <p className={`text-xs mt-0.5 ${
           isActive ? "text-white/70" : "text-gray-500"
         }`}>
-          {lesson.duration}
+          {lesson.duration ? `${lesson.duration} min` : ""}
         </p>
       </div>
       {isActive && (

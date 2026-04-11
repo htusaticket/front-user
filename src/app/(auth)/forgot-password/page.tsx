@@ -59,20 +59,24 @@ export default function ForgotPassword() {
       className="mx-auto w-full max-w-lg"
     >
       <div className="mb-8 flex flex-col items-center text-center">
-        <Image
-          src="/logo.webp"
-          alt="High Ticket USA"
-          width={100}
-          height={100}
-          className="mb-4"
-          priority
-        />
+        <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-black">
+          <Image
+            src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+            alt="High Ticket USA"
+            width={96}
+            height={96}
+            className="h-24 w-24 object-cover object-top"
+            priority
+          />
+        </div>
         <h2 className="font-display text-3xl font-bold text-gray-900">
           Recuperar Contraseña
         </h2>
-        <p className="mt-2 text-sm text-gray-500">
-          Ingresa tu correo y te enviaremos las instrucciones
-        </p>
+        {!isSent && (
+          <p className="mt-2 text-sm text-gray-500">
+            Ingresa tu correo y te enviaremos las instrucciones
+          </p>
+        )}
       </div>
 
       {!isSent ? (
