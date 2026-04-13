@@ -74,7 +74,7 @@ export default function ClassesPage() {
   const [showMaterialsModal, setShowMaterialsModal] = useState(false);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedMaterialsTitle, setSelectedMaterialsTitle] = useState("");
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 30;
 
   const { availableClasses, mySchedule, isLoading, fetchAvailableClasses,
     fetchMySchedule, enrollInClass, cancelEnrollment } = useClassesStore();
