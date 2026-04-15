@@ -45,7 +45,7 @@ const COLUMNS: {
   {
     id: "APPLIED",
     key: "applied",
-    title: "Verification Stage",
+    title: "Initial Application",
     borderColor: "border-blue-200",
     bgColor: "bg-blue-50",
     textColor: "text-blue-900",
