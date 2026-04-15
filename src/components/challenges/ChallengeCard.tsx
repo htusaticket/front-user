@@ -225,7 +225,7 @@ export function ChallengeCard({
         {/* Instructions */}
         <div className="mb-6 rounded-xl bg-blue-50 p-4">
           <h3 className="mb-2 font-bold text-blue-900">Instructions:</h3>
-          <p className="text-sm text-blue-800">{challenge.instructions}</p>
+          <p className="text-sm text-blue-800 whitespace-pre-line">{challenge.instructions}</p>
         </div>
 
         {/* Challenge Content */}

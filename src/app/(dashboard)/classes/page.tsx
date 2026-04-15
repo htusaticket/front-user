@@ -811,12 +811,6 @@ export default function ClassesPage() {
               setSelectedClass(null);
             }
           }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowCancelModal(false);
-              setSelectedClass(null);
-            }
-          }}
           role="dialog"
           tabIndex={-1}
           ref={(el) => el?.focus()}
@@ -884,7 +878,6 @@ export default function ClassesPage() {
       {showMaterialsModal && selectedMaterials.length > 0 && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onClick={() => setShowMaterialsModal(false)}
           role="dialog"
           tabIndex={-1}
         >
@@ -892,7 +885,6 @@ export default function ClassesPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-brand-cyan-dark/5 border-b border-gray-100 px-6 py-4">
               <div className="flex items-center justify-between">

@@ -18,6 +18,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useState } from "react";
 
+import { useAppLogo } from "@/hooks/useAppLogo";
 import { useAuthStore } from "@/store/auth";
 import { useProfileStore } from "@/store/profile";
 
@@ -59,6 +60,7 @@ const SidebarContent = ({
   systemSettings,
   isCollapsed = false,
   onToggleCollapse,
+  logoUrl,
 }: {
   pathname: string;
   onClose?: () => void;
@@ -66,6 +68,7 @@ const SidebarContent = ({
   systemSettings: { jobBoardEnabled: boolean; academyEnabled: boolean };
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  logoUrl: string;
 }) => {
   // Filter menu items based on system settings (global admin toggles only)
   const filteredMenuItems = menuItems.filter((item) => {
@@ -83,7 +86,7 @@ const SidebarContent = ({
         {isCollapsed ? (
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-black">
             <Image
-              src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+              src={logoUrl}
               alt="High Ticket USA"
               width={40}
               height={40}
@@ -95,7 +98,7 @@ const SidebarContent = ({
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-black">
                 <Image
-                  src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+                  src={logoUrl}
                   alt="High Ticket USA"
                   width={40}
                   height={40}
@@ -199,6 +202,7 @@ export const Sidebar = () => {
   const { isOpen, setIsOpen, isCollapsed, setIsCollapsed } = useSidebar();
   const logout = useAuthStore((state) => state.logout);
   const systemSettings = useProfileStore((state) => state.systemSettings);
+  const logoUrl = useAppLogo();
 
   const handleLogout = () => {
     logout();
@@ -219,6 +223,7 @@ export const Sidebar = () => {
           systemSettings={systemSettings}
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          logoUrl={logoUrl}
         />
       </aside>
 
@@ -247,6 +252,7 @@ export const Sidebar = () => {
                 onClose={() => setIsOpen(false)}
                 onLogout={handleLogout}
                 systemSettings={systemSettings}
+                logoUrl={logoUrl}
               />
             </motion.aside>
           </>

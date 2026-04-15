@@ -16,6 +16,8 @@ import {
   Crown,
   Globe,
   ExternalLink,
+  Mail,
+  DollarSign,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -59,6 +61,8 @@ export default function JobsPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isRequestingUpgrade, setIsRequestingUpgrade] = useState(false);
   const [hasRequestedUpgrade, setHasRequestedUpgrade] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const JOBS_PER_PAGE = 10;
 
   // Check if user has access to job board
   const hasJobAccess = planFeatures?.jobBoard ?? false;
@@ -155,6 +159,17 @@ export default function JobsPage() {
   const filteredJobs = useMemo(() => {
     return jobs;
   }, [jobs]);
+
+  // Reset to page 1 whenever the underlying list changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.search, filters.type, filters.sortBy, jobs.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * JOBS_PER_PAGE;
+    return filteredJobs.slice(start, start + JOBS_PER_PAGE);
+  }, [filteredJobs, currentPage]);
 
   if (isLoading && jobs.length === 0) {
     return (
@@ -394,7 +409,7 @@ export default function JobsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by title, company..."
+            placeholder="Search by title, company, code..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-cyan-dark focus:ring-2 focus:ring-brand-cyan-dark/20"
@@ -551,21 +566,44 @@ export default function JobsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Job List */}
-          <div className="space-y-4 lg:col-span-1">
-            {filteredJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                isSelected={selectedJob?.id === job.id}
-                onClick={() => setSelectedJob(job)}
-              />
-            ))}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          {/* Job List — paginated (max 10) and scrollable */}
+          <div className="lg:col-span-1 flex flex-col gap-3">
+            <div className="space-y-4 overflow-y-auto pr-2 max-h-[calc(100vh-16rem)]">
+              {paginatedJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  isSelected={selectedJob?.id === job.id}
+                  onClick={() => setSelectedJob(job)}
+                />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg px-3 py-1 font-semibold text-brand-cyan-dark hover:bg-brand-cyan-dark/10 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  Prev
+                </button>
+                <span className="text-xs font-medium text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg px-3 py-1 font-semibold text-brand-cyan-dark hover:bg-brand-cyan-dark/10 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Job Detail */}
-          <div className="lg:col-span-2">
+          {/* Job Detail — fixed/sticky on desktop while list scrolls */}
+          <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
             {selectedJob && (
               <JobDetail
                 job={selectedJob}
@@ -758,6 +796,21 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
               <ExternalLink className="h-3 w-3" />
             </a>
           )}
+          {job.email && (
+            <a
+              href={`mailto:${job.email}`}
+              className="flex items-center gap-2 text-brand-cyan-dark transition-colors hover:text-brand-cyan"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="underline">{job.email}</span>
+            </a>
+          )}
+          {job.revenue ? (
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-gray-400" />
+              <span>${job.revenue.toLocaleString()}/Mo revenue</span>
+            </div>
+          ) : null}
         </div>
       </div>
 

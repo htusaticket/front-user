@@ -27,7 +27,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useApplicationsStore } from "@/store/jobs";
 import type { Application, ApplicationStatus } from "@/types/jobs";
@@ -45,7 +45,7 @@ const COLUMNS: {
   {
     id: "APPLIED",
     key: "applied",
-    title: "Applied",
+    title: "Verification Stage",
     borderColor: "border-blue-200",
     bgColor: "bg-blue-50",
     textColor: "text-blue-900",
@@ -54,7 +54,7 @@ const COLUMNS: {
   {
     id: "PENDING",
     key: "pending",
-    title: "Pending",
+    title: "Applied",
     borderColor: "border-yellow-200",
     bgColor: "bg-yellow-50",
     textColor: "text-yellow-900",
@@ -97,6 +97,19 @@ export default function MyApplicationsPage() {
   }>({ isOpen: false, application: null });
   const [notesText, setNotesText] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+  const closeNotesModal = useCallback(() => {
+    setNotesModal({ isOpen: false, application: null });
+  }, []);
+
+  useEffect(() => {
+    if (!notesModal.isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeNotesModal();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [notesModal.isOpen, closeNotesModal]);
 
   // DnD sensors
   const sensors = useSensors(
@@ -280,7 +293,7 @@ export default function MyApplicationsPage() {
             className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
           >
             <button
-              onClick={() => setNotesModal({ isOpen: false, application: null })}
+              onClick={closeNotesModal}
               className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
             >
               <X className="h-5 w-5" />
@@ -306,7 +319,7 @@ export default function MyApplicationsPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setNotesModal({ isOpen: false, application: null })}
+                onClick={closeNotesModal}
                 className="flex-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50"
               >
                 Cancel

@@ -9,11 +9,13 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 import { InputField } from "@/components/auth/FormInputs";
+import { useAppLogo } from "@/hooks/useAppLogo";
 import { useAuthStore } from "@/store/auth";
 
 export default function ForgotPassword() {
   const router = useRouter();
   const { forgotPassword, isLoading } = useAuthStore();
+  const logoUrl = useAppLogo();
 
   // Verificar si ya está autenticado
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function ForgotPassword() {
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-black">
           <Image
-            src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+            src={logoUrl}
             alt="High Ticket USA"
             width={96}
             height={96}

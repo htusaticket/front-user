@@ -12,6 +12,7 @@ import flags from "react-phone-number-input/flags";
 
 import { CountrySelect } from "@/components/auth/CountrySelect";
 import { InputField, PasswordField } from "@/components/auth/FormInputs";
+import { useAppLogo } from "@/hooks/useAppLogo";
 import { useAuthStore } from "@/store/auth";
 
 import "react-phone-number-input/style.css";
@@ -19,6 +20,7 @@ import "react-phone-number-input/style.css";
 export default function Register() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useAuthStore();
+  const logoUrl = useAppLogo();
 
   // Verificar si ya está autenticado
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function Register() {
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-black">
           <Image
-            src="https://pub-edad5806cdff45b08f50aa762e6fce6c.r2.dev/HT_USA_Logo-lau.png"
+            src={logoUrl}
             alt="High Ticket USA"
             width={96}
             height={96}
