@@ -19,7 +19,7 @@ import {
   Loader2 as Loader2Icon,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
@@ -34,6 +34,43 @@ const MONTH_MAP: Record<string, number> = {
   Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
   Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
 };
+
+// Turn raw URLs inside a description into clickable links. Keeps preceding
+// tags like "[RECORDING]" intact — we only replace the http(s) token itself.
+const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
+
+function renderDescriptionWithLinks(text: string): React.ReactNode {
+  // Walk the string with exec() so each segment has a stable char offset we
+  // can use as a React key (index-based keys trip `react/no-array-index-key`).
+  const re = new RegExp(URL_REGEX.source, URL_REGEX.flags);
+  const nodes: React.ReactNode[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > cursor) {
+      const before = text.slice(cursor, match.index);
+      nodes.push(<span key={`t-${cursor}`}>{before}</span>);
+    }
+    const url = match[0];
+    nodes.push(
+      <a
+        key={`u-${match.index}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="text-brand-cyan-dark underline hover:text-brand-cyan break-all"
+      >
+        {url}
+      </a>,
+    );
+    cursor = match.index + url.length;
+  }
+  if (cursor < text.length) {
+    nodes.push(<span key={`t-${cursor}`}>{text.slice(cursor)}</span>);
+  }
+  return nodes;
+}
 
 function isClassPast(classItem: ClassSession): boolean {
   if (classItem.day === "Tomorrow") return false;
@@ -146,8 +183,6 @@ export default function ClassesPage() {
     try {
       const response = await enrollInClass(classId);
       toast.success(response.message);
-      // Cambiar a tab "My Schedule"
-      setActiveTab("booked");
     } catch (_error: unknown) {
       const error = _error as { response?: { status?: number; data?: { message?: string } } };
       if (error.response?.status === 403) {
@@ -463,7 +498,9 @@ export default function ClassesPage() {
                                 </div>
 
                                 <p className="mt-1 text-sm text-gray-500">
-                                  {classItem.description}
+                                  {classItem.description
+                                    ? renderDescriptionWithLinks(classItem.description)
+                                    : null}
                                 </p>
 
                                 <div className="mt-4 flex flex-wrap gap-4">
@@ -675,8 +712,9 @@ export default function ClassesPage() {
                             </div>
                           </div>
                           <p className="mt-2 line-clamp-2 text-sm text-gray-500">
-                            {classItem.description ||
-                              "Join this interactive session tailored for your level."}
+                            {classItem.description
+                              ? renderDescriptionWithLinks(classItem.description)
+                              : "Join this interactive session tailored for your level."}
                           </p>
                         </div>
 
