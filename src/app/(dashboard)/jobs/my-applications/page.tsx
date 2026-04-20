@@ -3,16 +3,20 @@
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
+  useDroppable,
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arrayMove,
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
@@ -27,7 +31,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useApplicationsStore } from "@/store/jobs";
 import type { Application, ApplicationStatus } from "@/types/jobs";
@@ -87,6 +91,7 @@ export default function MyApplicationsPage() {
     isLoading,
     fetchApplications,
     updateApplicationStatus,
+    reorderApplications,
     updateApplicationNotes,
   } = useApplicationsStore();
 
@@ -149,8 +154,18 @@ export default function MyApplicationsPage() {
   };
 
   const handleDragOver = (_event: DragOverEvent) => {
-    // We can add visual feedback here if needed
+    // Reserved for future visual hints; kept as no-op to avoid duplicate moves.
   };
+
+  // Prefer the pointer's current position when detecting the drop target so the
+  // card lands exactly where the user is pointing instead of wherever the card's
+  // corners happen to reach. Falls back to rect intersection when the pointer is
+  // outside any droppable (e.g. scrolling edges).
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const pointer = pointerWithin(args);
+    if (pointer.length > 0) return pointer;
+    return rectIntersection(args);
+  }, []);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -162,23 +177,48 @@ export default function MyApplicationsPage() {
     const applicationId = active.id as string;
     const overId = over.id as string;
 
-    // Check if dropped on a column
-    const targetColumn = COLUMNS.find((col) => col.id === overId);
-    const sourceColumn = findColumnByApplicationId(applicationId);
+    if (applicationId === overId) return;
 
+    const sourceColumn = findColumnByApplicationId(applicationId);
     if (!sourceColumn) return;
 
-    // If dropped on a column header
-    if (targetColumn && targetColumn.id !== sourceColumn) {
-      await updateApplicationStatus(applicationId, targetColumn.id, sourceColumn);
+    // Resolve target column: `over` is either a column id or another card id
+    const overIsColumn = COLUMNS.some((col) => col.id === overId);
+    const targetColumn = overIsColumn
+      ? (overId as ApplicationStatus)
+      : findColumnByApplicationId(overId);
+    if (!targetColumn) return;
+
+    const sourceKey = COLUMNS.find((c) => c.id === sourceColumn)!.key;
+    const targetKey = COLUMNS.find((c) => c.id === targetColumn)!.key;
+    const targetList = applications[targetKey];
+
+    // Determine destination index in the target column
+    let targetIndex: number;
+    if (overIsColumn) {
+      targetIndex = targetList.length;
+    } else {
+      targetIndex = targetList.findIndex((app) => app.id === overId);
+      if (targetIndex === -1) targetIndex = targetList.length;
+    }
+
+    // Same column → reorder
+    if (sourceColumn === targetColumn) {
+      const sourceIndex = applications[sourceKey].findIndex(
+        (app) => app.id === applicationId,
+      );
+      if (sourceIndex === -1 || sourceIndex === targetIndex) return;
+
+      const reordered = arrayMove(applications[sourceKey], sourceIndex, targetIndex);
+      await reorderApplications(
+        sourceColumn,
+        reordered.map((app) => app.id),
+      );
       return;
     }
 
-    // If dropped on another card, find which column that card belongs to
-    const targetCardColumn = findColumnByApplicationId(overId);
-    if (targetCardColumn && targetCardColumn !== sourceColumn) {
-      await updateApplicationStatus(applicationId, targetCardColumn, sourceColumn);
-    }
+    // Different column → move with explicit insert position
+    await updateApplicationStatus(applicationId, targetColumn, sourceColumn, targetIndex);
   };
 
   const handleOpenNotes = (application: Application) => {
@@ -247,7 +287,7 @@ export default function MyApplicationsPage() {
       {/* Kanban Board */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
@@ -268,7 +308,11 @@ export default function MyApplicationsPage() {
           {activeApplication ? (
             <ApplicationCard
               application={activeApplication}
-              column={COLUMNS.find((c) => c.id === findColumnByApplicationId(activeApplication.id))!}
+              column={
+                COLUMNS.find(
+                  (c) => c.id === findColumnByApplicationId(activeApplication.id),
+                ) ?? COLUMNS[0]
+              }
               isDragging
               onOpenNotes={() => {}}
             />
@@ -356,26 +400,25 @@ interface KanbanColumnProps {
 }
 
 function KanbanColumn({ column, applications, onOpenNotes }: KanbanColumnProps) {
-  const { setNodeRef } = useSortable({
+  const { setNodeRef, isOver } = useDroppable({
     id: column.id,
-    data: {
-      type: "column",
-    },
+    data: { type: "column" },
   });
+
+  const itemIds = useMemo(() => applications.map((app) => app.id), [applications]);
 
   return (
     <div
       ref={setNodeRef}
-      className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
+      className={`rounded-2xl border ${
+        isOver ? "border-brand-cyan-dark bg-gray-100" : "border-gray-200 bg-gray-50"
+      } p-4 transition-colors`}
     >
       <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-brand-primary">
         {column.title} ({applications.length})
       </h3>
 
-      <SortableContext
-        items={applications.map((app) => app.id)}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
         <div className="min-h-[100px] space-y-3">
           {applications.map((app) => (
             <SortableApplicationCard

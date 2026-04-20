@@ -118,7 +118,7 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
         },
       }));
 
-      toast.success("Has aplicado exitosamente a esta oferta");
+      toast.success("Application submitted successfully");
       return true;
     } catch (error) {
       const message = getErrorMessage(error);
@@ -148,7 +148,12 @@ interface ApplicationsActions {
   updateApplicationStatus: (
     applicationId: string,
     newStatus: ApplicationStatus,
-    previousStatus: ApplicationStatus
+    previousStatus: ApplicationStatus,
+    targetIndex?: number,
+  ) => Promise<boolean>;
+  reorderApplications: (
+    status: ApplicationStatus,
+    orderedIds: string[],
   ) => Promise<boolean>;
   updateApplicationNotes: (applicationId: string, notes: string) => Promise<boolean>;
 }
@@ -177,6 +182,14 @@ const getStatusKey = (status: ApplicationStatus): keyof ApplicationsByStatus => 
   return status.toLowerCase() as keyof ApplicationsByStatus;
 };
 
+// Friendly labels for toasts (column titles are defined in the page component)
+const STATUS_LABEL: Record<ApplicationStatus, string> = {
+  APPLIED: "Initial Application",
+  PENDING: "Applied",
+  INTERVIEW: "Interview",
+  REJECTED: "Lost",
+};
+
 export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
   ...initialApplicationsState,
 
@@ -203,10 +216,11 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
     applicationId: string,
     newStatus: ApplicationStatus,
     previousStatus: ApplicationStatus,
+    targetIndex?: number,
   ) => {
     const previousApplications = get().applications;
     const previousStats = get().stats;
-    
+
     const newStatusKey = getStatusKey(newStatus);
     const previousStatusKey = getStatusKey(previousStatus);
 
@@ -217,17 +231,26 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
 
     if (!application) return false;
 
+    let orderedTargetIds: string[] | null = null;
+
     // Optimistic update
     set((state) => {
       const newApplications = { ...state.applications };
-      
+
       // Remove from previous column
       newApplications[previousStatusKey] = newApplications[previousStatusKey].filter(
         (app) => app.id !== applicationId,
       );
-      
-      // Add to new column
-      newApplications[newStatusKey] = [...newApplications[newStatusKey], application];
+
+      // Insert into new column at targetIndex (or append)
+      const destination = [...newApplications[newStatusKey]];
+      const insertAt =
+        typeof targetIndex === "number" && targetIndex >= 0 && targetIndex <= destination.length
+          ? targetIndex
+          : destination.length;
+      destination.splice(insertAt, 0, application);
+      newApplications[newStatusKey] = destination;
+      orderedTargetIds = destination.map((app) => app.id);
 
       // Update stats
       const newStats = { ...state.stats };
@@ -244,8 +267,20 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
       await api.patch(`/api/applications/${applicationId}/status`, {
         status: newStatus,
       });
-      
-      toast.success(`Estado actualizado a ${newStatus}`);
+
+      // Persist ordering in the destination column if the card was inserted mid-list
+      if (
+        orderedTargetIds &&
+        typeof targetIndex === "number" &&
+        targetIndex < (orderedTargetIds as string[]).length - 1
+      ) {
+        await api.patch("/api/applications/reorder", {
+          status: newStatus,
+          orderedIds: orderedTargetIds,
+        });
+      }
+
+      toast.success(`Moved to ${STATUS_LABEL[newStatus]}`);
       return true;
     } catch (error) {
       // Revert on error
@@ -253,7 +288,38 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
         applications: previousApplications,
         stats: previousStats,
       });
-      
+
+      const message = getErrorMessage(error);
+      toast.error(message);
+      return false;
+    }
+  },
+
+  reorderApplications: async (status: ApplicationStatus, orderedIds: string[]) => {
+    const previousApplications = get().applications;
+    const statusKey = getStatusKey(status);
+
+    // Optimistic reorder
+    set((state) => {
+      const column = state.applications[statusKey];
+      const byId = new Map(column.map((app) => [app.id, app]));
+      const reordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter((app): app is NonNullable<typeof app> => Boolean(app));
+
+      return {
+        applications: {
+          ...state.applications,
+          [statusKey]: reordered,
+        },
+      };
+    });
+
+    try {
+      await api.patch("/api/applications/reorder", { status, orderedIds });
+      return true;
+    } catch (error) {
+      set({ applications: previousApplications });
       const message = getErrorMessage(error);
       toast.error(message);
       return false;
@@ -286,7 +352,7 @@ export const useApplicationsStore = create<ApplicationsStore>((set, get) => ({
         return { applications: newApplications };
       });
 
-      toast.success("Notas actualizadas");
+      toast.success("Notes updated");
       return true;
     } catch (error) {
       const message = getErrorMessage(error);
