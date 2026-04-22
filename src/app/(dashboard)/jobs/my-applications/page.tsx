@@ -25,7 +25,7 @@ import { motion } from "framer-motion";
 import {
   Briefcase,
   ChevronRight,
-  GripVertical,
+  ExternalLink,
   Loader2,
   MessageSquare,
   X,
@@ -324,8 +324,8 @@ export default function MyApplicationsPage() {
       {/* Info Box */}
       <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-900">
-          💡 <strong>Tip:</strong> Use the small dots next to the job title to drag cards between columns.
-          Click the notes icon to add personal notes.
+          💡 <strong>Tip:</strong> Drag cards between columns to update their status.
+          Click the notes icon to add personal notes, or the link icon to view the job offer.
         </p>
       </div>
 
@@ -501,36 +501,17 @@ function ApplicationCard({
 }: ApplicationCardProps) {
   const router = useRouter();
 
-  const goToOffer = () => {
-    router.push(`/jobs?job=${application.job.id}`);
-  };
-
-  const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      goToOffer();
-    }
-  };
-
   return (
     <motion.div
-      role="button"
-      tabIndex={0}
-      onClick={goToOffer}
-      onKeyDown={handleCardKeyDown}
-      className={`cursor-pointer rounded-xl border ${column.borderColor} bg-white p-4 shadow-sm transition-all ${
-        isDragging ? "rotate-2 scale-105 shadow-lg" : "hover:shadow-md"
+      {...attributes}
+      {...listeners}
+      className={`touch-none select-none rounded-xl border ${column.borderColor} bg-white p-4 shadow-sm transition-all ${
+        isDragging
+          ? "rotate-2 scale-105 cursor-grabbing shadow-lg"
+          : "cursor-grab hover:shadow-md active:cursor-grabbing"
       } ${column.id === "REJECTED" ? "opacity-75" : ""}`}
     >
       <div className="mb-3 flex items-start gap-2">
-        <button
-          className="cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
-          onClick={(e) => e.stopPropagation()}
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
         <div className="flex-1">
           <h4 className="font-bold text-brand-primary">{application.job.title}</h4>
           <p className="text-sm text-gray-600">{application.job.company}</p>
@@ -540,20 +521,34 @@ function ApplicationCard({
             </p>
           )}
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenNotes(application);
-          }}
-          className={`rounded-lg p-1 transition-colors ${
-            application.notes
-              ? "bg-brand-cyan-dark/10 text-brand-cyan-dark"
-              : "text-gray-400 hover:text-gray-600"
-          }`}
-          title={application.notes ? "Edit notes" : "Add notes"}
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenNotes(application);
+            }}
+            className={`rounded-lg p-1 transition-colors ${
+              application.notes
+                ? "bg-brand-cyan-dark/10 text-brand-cyan-dark"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+            title={application.notes ? "Edit notes" : "Add notes"}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/jobs?job=${application.job.id}`);
+            }}
+            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-brand-cyan-dark/10 hover:text-brand-cyan-dark"
+            title="View offer"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-gray-500">
