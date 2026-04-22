@@ -60,6 +60,7 @@ export interface Application {
     id: number;
     title: string;
     company: string;
+    code?: string | null;
   };
   appliedDate: string;
   notes: string | null;

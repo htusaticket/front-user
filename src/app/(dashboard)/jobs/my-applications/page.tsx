@@ -515,6 +515,11 @@ function ApplicationCard({
         <div className="flex-1">
           <h4 className="font-bold text-brand-primary">{application.job.title}</h4>
           <p className="text-sm text-gray-600">{application.job.company}</p>
+          {application.job.code && (
+            <p className="mt-1 inline-block rounded-md bg-brand-primary/10 px-2 py-0.5 text-xs font-bold text-brand-primary">
+              CODE: {application.job.code}
+            </p>
+          )}
         </div>
         <button
           onClick={() => onOpenNotes(application)}

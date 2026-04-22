@@ -28,6 +28,8 @@ import { useJobsStore } from "@/store/jobs";
 import { useProfileStore } from "@/store/profile";
 import type { JobOffer, JobSortBy } from "@/types/jobs";
 
+const APPLY_FORM_URL = "https://airtable.com/appiPekJv9PdMSORq/pagHDDxQnMHRJxILZ/form";
+
 const SORT_OPTIONS: { value: JobSortBy; label: string }[] = [
   { value: "best_match", label: "Best Match" },
   { value: "newest_first", label: "Newest First" },
@@ -122,7 +124,7 @@ export default function JobsPage() {
     setIsApplying(true);
     await applyToJob(jobId);
     // Open airtable application form
-    window.open("https://airtable.com/appiPekJv9PdMSORq/pagHDDxQnMHRJxILZ/form", "_blank");
+    window.open(APPLY_FORM_URL, "_blank");
     setIsApplying(false);
   }, [applyToJob]);
 
@@ -837,15 +839,23 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
         )}
       </div>
 
-      <div className="flex">
+      <div className="flex flex-col gap-2">
         {job.hasApplied ? (
-          <button
-            disabled
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-200 px-6 py-3 text-sm font-bold text-gray-500"
-          >
-            <CheckCircle className="h-4 w-4" />
-            Applied
-          </button>
+          <>
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-100 px-6 py-3 text-sm font-bold text-green-700">
+              <CheckCircle className="h-4 w-4" />
+              Applied
+            </div>
+            <a
+              href={APPLY_FORM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-cyan-dark px-6 py-3 text-sm font-bold text-brand-cyan-dark transition-all hover:bg-brand-cyan-dark/10"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open Application Form
+            </a>
+          </>
         ) : (
           <motion.button
             onClick={() => onApply(job.id)}
