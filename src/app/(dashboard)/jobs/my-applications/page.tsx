@@ -31,6 +31,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useApplicationsStore } from "@/store/jobs";
@@ -498,15 +499,33 @@ function ApplicationCard({
   listeners,
   onOpenNotes,
 }: ApplicationCardProps) {
+  const router = useRouter();
+
+  const goToOffer = () => {
+    router.push(`/jobs?job=${application.job.id}`);
+  };
+
+  const handleCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToOffer();
+    }
+  };
+
   return (
     <motion.div
-      className={`rounded-xl border ${column.borderColor} bg-white p-4 shadow-sm transition-all ${
+      role="button"
+      tabIndex={0}
+      onClick={goToOffer}
+      onKeyDown={handleCardKeyDown}
+      className={`cursor-pointer rounded-xl border ${column.borderColor} bg-white p-4 shadow-sm transition-all ${
         isDragging ? "rotate-2 scale-105 shadow-lg" : "hover:shadow-md"
       } ${column.id === "REJECTED" ? "opacity-75" : ""}`}
     >
       <div className="mb-3 flex items-start gap-2">
         <button
           className="cursor-grab touch-none text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+          onClick={(e) => e.stopPropagation()}
           {...attributes}
           {...listeners}
         >
@@ -522,7 +541,10 @@ function ApplicationCard({
           )}
         </div>
         <button
-          onClick={() => onOpenNotes(application)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenNotes(application);
+          }}
           className={`rounded-lg p-1 transition-colors ${
             application.notes
               ? "bg-brand-cyan-dark/10 text-brand-cyan-dark"

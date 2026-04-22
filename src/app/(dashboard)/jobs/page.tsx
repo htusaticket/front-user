@@ -20,7 +20,8 @@ import {
   DollarSign,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
@@ -166,6 +167,27 @@ export default function JobsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filters.search, filters.type, filters.sortBy, jobs.length]);
+
+  // Honor `?job=<id>` deep-link (e.g., coming from My Applications): select that
+  // job and jump to the page it lives on. Runs once per jobs-load so later
+  // manual selection isn't overridden.
+  const searchParams = useSearchParams();
+  const requestedJobParam = searchParams?.get("job");
+  const appliedJobParamRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!requestedJobParam || jobs.length === 0) return;
+    if (appliedJobParamRef.current === requestedJobParam) return;
+
+    const requestedId = Number(requestedJobParam);
+    if (!Number.isFinite(requestedId)) return;
+
+    const index = jobs.findIndex((j) => j.id === requestedId);
+    if (index === -1) return;
+
+    setSelectedJob(jobs[index]);
+    setCurrentPage(Math.floor(index / JOBS_PER_PAGE) + 1);
+    appliedJobParamRef.current = requestedJobParam;
+  }, [requestedJobParam, jobs, setSelectedJob]);
 
   const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
   const paginatedJobs = useMemo(() => {
