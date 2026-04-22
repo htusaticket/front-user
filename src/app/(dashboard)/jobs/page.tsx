@@ -104,10 +104,20 @@ export default function JobsPage() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Fetch jobs on mount and when filters change
+  // Fetch jobs on mount and when filters change. A `?job=<id>` deep-link (from
+  // My Applications) is honored on first load by asking the store to pre-select
+  // that job so we don't flicker through the default first-job selection.
+  const searchParams = useSearchParams();
+  const requestedJobParam = searchParams?.get("job");
+  const deepLinkConsumedRef = useRef(false);
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs, filters.type, filters.sortBy]);
+    const preferredId =
+      !deepLinkConsumedRef.current && requestedJobParam
+        ? Number(requestedJobParam)
+        : undefined;
+    fetchJobs(Number.isFinite(preferredId) ? preferredId : undefined);
+    if (requestedJobParam) deepLinkConsumedRef.current = true;
+  }, [fetchJobs, filters.type, filters.sortBy, requestedJobParam]);
 
   // Debounced search
   useEffect(() => {
@@ -163,31 +173,19 @@ export default function JobsPage() {
     return jobs;
   }, [jobs]);
 
-  // Reset to page 1 whenever the underlying list changes
+  // Reset to page 1 when the user changes filters.
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters.search, filters.type, filters.sortBy, jobs.length]);
+  }, [filters.search, filters.type, filters.sortBy]);
 
-  // Honor `?job=<id>` deep-link (e.g., coming from My Applications): select that
-  // job and jump to the page it lives on. Runs once per jobs-load so later
-  // manual selection isn't overridden.
-  const searchParams = useSearchParams();
-  const requestedJobParam = searchParams?.get("job");
-  const appliedJobParamRef = useRef<string | null>(null);
+  // When the job list refreshes (e.g., after fetch), align the page with the
+  // currently-selected job so a deep-linked target beyond page 1 is visible in
+  // the list next to its detail view.
   useEffect(() => {
-    if (!requestedJobParam || jobs.length === 0) return;
-    if (appliedJobParamRef.current === requestedJobParam) return;
-
-    const requestedId = Number(requestedJobParam);
-    if (!Number.isFinite(requestedId)) return;
-
-    const index = jobs.findIndex((j) => j.id === requestedId);
-    if (index === -1) return;
-
-    setSelectedJob(jobs[index]);
-    setCurrentPage(Math.floor(index / JOBS_PER_PAGE) + 1);
-    appliedJobParamRef.current = requestedJobParam;
-  }, [requestedJobParam, jobs, setSelectedJob]);
+    if (!selectedJob || jobs.length === 0) return;
+    const idx = jobs.findIndex((j) => j.id === selectedJob.id);
+    if (idx >= 0) setCurrentPage(Math.floor(idx / JOBS_PER_PAGE) + 1);
+  }, [jobs, selectedJob]);
 
   const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
   const paginatedJobs = useMemo(() => {
@@ -681,13 +679,13 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 text-brand-cyan-dark hover:underline"
+            className="flex w-fit items-center gap-2 text-brand-cyan-dark hover:underline"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Social
           </a>
         ) : job.location ? (
-          <div className="flex items-center gap-2">
+          <div className="flex w-fit items-center gap-2">
             <MapPin className="h-3.5 w-3.5" />
             {job.location}
           </div>
@@ -698,7 +696,7 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 text-purple-600 hover:underline"
+            className="flex w-fit items-center gap-2 text-purple-600 hover:underline"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Recruiter
@@ -710,13 +708,13 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 text-brand-cyan-dark hover:underline"
+            className="flex w-fit items-center gap-2 text-brand-cyan-dark hover:underline"
           >
             <Globe className="h-3.5 w-3.5" />
             Website
           </a>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex w-fit items-center gap-2">
           {job.oteMin && job.oteMax
             ? `$${job.oteMin.toLocaleString()} - $${job.oteMax.toLocaleString()} OTE`
             : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}

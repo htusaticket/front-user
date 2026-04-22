@@ -28,7 +28,7 @@ interface JobsState {
 }
 
 interface JobsActions {
-  fetchJobs: () => Promise<void>;
+  fetchJobs: (preferredJobId?: number) => Promise<void>;
   setSelectedJob: (job: JobOffer | null) => void;
   setFilters: (filters: Partial<JobFilters>) => void;
   applyToJob: (jobId: number) => Promise<boolean>;
@@ -57,13 +57,13 @@ const initialJobsState: JobsState = {
 export const useJobsStore = create<JobsStore>((set, get) => ({
   ...initialJobsState,
 
-  fetchJobs: async () => {
+  fetchJobs: async (preferredJobId?: number) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const { filters } = get();
       const params: Record<string, string> = {};
-      
+
       if (filters.search) {
         params.search = filters.search;
       }
@@ -77,10 +77,18 @@ export const useJobsStore = create<JobsStore>((set, get) => ({
       const response = await api.get<{ success: boolean; data: JobListResponse }>("/api/jobs", { params });
       const { data } = response.data;
 
+      // Prefer the explicit deep-link target (e.g., from My Applications) if it
+      // exists in the fetched list; otherwise fall back to the first job.
+      const preferred =
+        preferredJobId !== undefined
+          ? data.jobs.find((j) => j.id === preferredJobId) ?? null
+          : null;
+      const fallback = data.jobs.length > 0 ? data.jobs[0] : null;
+
       set({
         jobs: data.jobs,
         stats: data.stats,
-        selectedJob: data.jobs.length > 0 ? data.jobs[0] : null,
+        selectedJob: preferred ?? fallback,
         isLoading: false,
       });
     } catch (error) {
