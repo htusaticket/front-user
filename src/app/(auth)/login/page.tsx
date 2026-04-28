@@ -104,13 +104,13 @@ export default function Login() {
       className="mx-auto w-full max-w-lg"
     >
       <div className="mb-8 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-black">
+        <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl">
           <Image
             src={logoUrl}
             alt="High Ticket USA"
             width={96}
             height={96}
-            className="h-24 w-24 object-cover object-top"
+            className="h-full w-full object-contain"
             priority
           />
         </div>
