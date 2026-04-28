@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   Briefcase,
+  Calendar,
   MapPin,
   Building,
   Filter,
@@ -30,6 +31,27 @@ import { useProfileStore } from "@/store/profile";
 import type { JobOffer, JobSortBy } from "@/types/jobs";
 
 const APPLY_FORM_URL = "https://airtable.com/appiPekJv9PdMSORq/pagHDDxQnMHRJxILZ/form";
+
+const formatJobDate = (date: Date | string): string => {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const startOfDay = (x: Date) => {
+    const c = new Date(x);
+    c.setHours(0, 0, 0, 0);
+    return c;
+  };
+  const today = startOfDay(new Date());
+  const target = startOfDay(d);
+  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(d);
+};
 
 const SORT_OPTIONS: { value: JobSortBy; label: string }[] = [
   { value: "best_match", label: "Best Match" },
@@ -729,9 +751,13 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
             : (job.salaryRange?.replace(/\$+/g, "$") || "Not specified")}
         </div>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex items-center justify-between gap-2">
         <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
           {job.type}
+        </span>
+        <span className="flex items-center gap-1 text-xs font-medium text-gray-500">
+          <Calendar className="h-3.5 w-3.5" />
+          {formatJobDate(job.createdAt)}
         </span>
       </div>
     </motion.div>
