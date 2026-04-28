@@ -66,6 +66,15 @@ export default function JobsPage() {
   const [hasRequestedUpgrade, setHasRequestedUpgrade] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const JOBS_PER_PAGE = 10;
+  const jobListRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    jobListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   // Check if user has access to job board
   const hasJobAccess = planFeatures?.jobBoard ?? false;
@@ -591,7 +600,7 @@ export default function JobsPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
           {/* Job List — paginated (max 10) and scrollable */}
           <div className="lg:col-span-1 flex flex-col gap-3">
-            <div className="space-y-4 overflow-y-auto pr-2 max-h-[calc(100vh-16rem)]">
+            <div ref={jobListRef} className="space-y-4 overflow-y-auto pr-2 max-h-[calc(100vh-16rem)]">
               {paginatedJobs.map((job) => (
                 <JobCard
                   key={job.id}
@@ -604,7 +613,7 @@ export default function JobsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="rounded-lg px-3 py-1 font-semibold text-brand-cyan-dark hover:bg-brand-cyan-dark/10 disabled:opacity-40 disabled:hover:bg-transparent"
                 >
@@ -614,7 +623,7 @@ export default function JobsPage() {
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="rounded-lg px-3 py-1 font-semibold text-brand-cyan-dark hover:bg-brand-cyan-dark/10 disabled:opacity-40 disabled:hover:bg-transparent"
                 >
