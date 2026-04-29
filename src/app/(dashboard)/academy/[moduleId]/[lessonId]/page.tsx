@@ -157,7 +157,7 @@ export default function LessonPage() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 space-y-6">
+      <div className="flex-1 min-w-0 space-y-4">
         {/* Confetti Effect */}
         <ConfettiEffect trigger={showConfetti} type="celebration" />
 
@@ -188,7 +188,7 @@ export default function LessonPage() {
             additionalVideos={currentLesson.resources}
           />
           
-          <div className="p-6">
+          <div className="px-6 pt-4 pb-3">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
                 <h1 className="font-display text-xl sm:text-2xl font-bold text-brand-primary">
@@ -219,7 +219,7 @@ export default function LessonPage() {
 
             {/* Description */}
             {currentLesson.description && (
-              <div className="mt-6">
+              <div className="mt-4">
                 <h2 className="font-display text-lg font-bold text-brand-primary">
                   Description
                 </h2>
