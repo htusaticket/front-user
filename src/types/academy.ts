@@ -7,6 +7,14 @@ export interface LessonSummary {
   title: string;
   duration: string;
   completed: boolean;
+  sectionId?: number | null;
+}
+
+export interface SectionWithLessons {
+  id: number | null; // null = virtual bucket of lessons not assigned to any real section
+  title: string | null;
+  order: number;
+  lessons: LessonSummary[];
 }
 
 export interface LessonResource {
@@ -49,6 +57,7 @@ export interface ModuleWithProgress {
   completedLessons: number;
   progress: number;
   lessons: LessonSummary[];
+  sections?: SectionWithLessons[];
 }
 
 // ==================== ACADEMY OVERVIEW ====================

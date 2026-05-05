@@ -99,13 +99,25 @@ export const useAcademyStore = create<AcademyStore>((set, get) => ({
                 ? { ...lesson, completed: result.completed }
                 : lesson,
             );
-            
+
+            // Mirror the toggle inside the grouped sections array, otherwise
+            // the new section-aware sidebar would render stale completion.
+            const updatedSections = module.sections?.map((section) => ({
+              ...section,
+              lessons: section.lessons.map((lesson) =>
+                lesson.id === lessonId
+                  ? { ...lesson, completed: result.completed }
+                  : lesson,
+              ),
+            }));
+
             // Recalculate completed lessons count
             const completedLessons = updatedLessons.filter((l) => l.completed).length;
-            
+
             return {
               ...module,
               lessons: updatedLessons,
+              ...(updatedSections ? { sections: updatedSections } : {}),
               completedLessons,
               progress: result.moduleProgress,
             };

@@ -18,7 +18,7 @@ import {
   Globe,
   ExternalLink,
   Mail,
-  DollarSign,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -864,7 +864,7 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
           )}
           {job.revenue ? (
             <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-gray-400" />
+              <Wallet className="h-4 w-4 text-gray-400" />
               <span>${job.revenue.toLocaleString()}/Mo revenue</span>
             </div>
           ) : null}

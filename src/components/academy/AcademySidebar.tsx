@@ -81,20 +81,66 @@ function SidebarContent({
 
       {/* Lessons List */}
       <div className="flex-1 overflow-y-auto p-3">
-        <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Lessons
-        </p>
-        <div className="space-y-1">
-          {module.lessons.map((lesson, index) => (
-            <LessonItem
-              key={lesson.id}
-              lesson={lesson}
-              index={index + 1}
-              isActive={lesson.id === currentLessonId}
-              onSelect={() => onLessonClick(lesson.id)}
-            />
-          ))}
-        </div>
+        {(() => {
+          const sections = module.sections || [];
+          const hasRealSections = sections.some(s => s.title !== null && s.id !== null);
+
+          if (!hasRealSections) {
+            return (
+              <>
+                <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  Lessons
+                </p>
+                <div className="space-y-1">
+                  {module.lessons.map((lesson, index) => (
+                    <LessonItem
+                      key={lesson.id}
+                      lesson={lesson}
+                      index={index + 1}
+                      isActive={lesson.id === currentLessonId}
+                      onSelect={() => onLessonClick(lesson.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            );
+          }
+
+          // Render grouped by section. Lesson numbers run continuously across
+          // sections so the student keeps a stable progress index.
+          const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+          const lessonNumber = new Map<number, number>();
+          sortedSections
+            .flatMap((s) => s.lessons)
+            .forEach((l, i) => lessonNumber.set(l.id, i + 1));
+
+          return (
+            <div className="space-y-4">
+              {sortedSections.map((section) => {
+                const isVirtual = section.id === null || section.title === null;
+                if (section.lessons.length === 0) return null;
+                return (
+                  <div key={section.id ?? "virtual"}>
+                    <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      {isVirtual ? "Other Lessons" : section.title}
+                    </p>
+                    <div className="space-y-1">
+                      {section.lessons.map((lesson) => (
+                        <LessonItem
+                          key={lesson.id}
+                          lesson={lesson}
+                          index={lessonNumber.get(lesson.id) ?? 0}
+                          isActive={lesson.id === currentLessonId}
+                          onSelect={() => onLessonClick(lesson.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Footer */}
