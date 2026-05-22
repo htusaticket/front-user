@@ -462,7 +462,7 @@ export default function JobsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by title, company, code..."
+            placeholder="Search by title, company, code, description..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-cyan-dark focus:ring-2 focus:ring-brand-cyan-dark/20"
@@ -697,7 +697,9 @@ function JobCard({ job, isSelected, onClick }: JobCardProps) {
           <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
         )}
       </div>
-      <p className="mb-2 text-sm font-semibold text-gray-700">{job.company}</p>
+      {job.company && job.company.trim().toLowerCase() !== "unknown" && (
+        <p className="mb-2 text-sm font-semibold text-gray-700">{job.company}</p>
+      )}
       {job.code && (
         <p className="mb-2 inline-block rounded-md bg-brand-primary/10 px-2 py-0.5 text-xs font-bold text-brand-primary">
           CODE: {job.code}
@@ -784,9 +786,11 @@ function JobDetail({ job, onApply, isApplying }: JobDetailProps) {
             <h2 className="font-display text-2xl font-bold text-brand-primary">
               {job.title}
             </h2>
-            <p className="mt-1 text-lg font-semibold text-gray-700">
-              {job.company}
-            </p>
+            {job.company && job.company.trim().toLowerCase() !== "unknown" && (
+              <p className="mt-1 text-lg font-semibold text-gray-700">
+                {job.company}
+              </p>
+            )}
             {job.code && (
               <p className="mt-2 inline-block rounded-md bg-brand-primary/10 px-2.5 py-1 text-sm font-bold text-brand-primary">
                 CODE: {job.code}

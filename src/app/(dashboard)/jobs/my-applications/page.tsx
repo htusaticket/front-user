@@ -347,9 +347,12 @@ export default function MyApplicationsPage() {
             <h3 className="mb-2 font-display text-lg font-bold text-brand-primary">
               Notes for {notesModal.application.job.title}
             </h3>
-            <p className="mb-4 text-sm text-gray-600">
-              {notesModal.application.job.company}
-            </p>
+            {notesModal.application.job.company &&
+              notesModal.application.job.company.trim().toLowerCase() !== "unknown" && (
+              <p className="mb-4 text-sm text-gray-600">
+                {notesModal.application.job.company}
+              </p>
+            )}
 
             <textarea
               value={notesText}
@@ -514,7 +517,10 @@ function ApplicationCard({
       <div className="mb-3 flex items-start gap-2">
         <div className="flex-1">
           <h4 className="font-bold text-brand-primary">{application.job.title}</h4>
-          <p className="text-sm text-gray-600">{application.job.company}</p>
+          {application.job.company &&
+            application.job.company.trim().toLowerCase() !== "unknown" && (
+            <p className="text-sm text-gray-600">{application.job.company}</p>
+          )}
           {application.job.code && (
             <p className="mt-1 inline-block rounded-md bg-brand-primary/10 px-2 py-0.5 text-xs font-bold text-brand-primary">
               CODE: {application.job.code}
