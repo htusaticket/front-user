@@ -39,8 +39,25 @@ function getTimeZoneLabel(date: Date): string {
  *
  * Reemplaza los strings day/date/time que el backend formateaba en una zona fija.
  */
-export function formatClassSchedule(startISO: string, endISO?: string): ClassScheduleDisplay {
+export function formatClassSchedule(
+  startISO: string,
+  endISO?: string,
+  fallback?: { day: string; date: string; time: string },
+): ClassScheduleDisplay {
   const start = new Date(startISO);
+
+  // Si el backend todavía no envía los timestamps ISO (o son inválidos),
+  // degradamos a los strings de zona fija que ya manda, en vez de mostrar
+  // "Invalid Date". La conversión a zona local recién aplica con ISO válido.
+  if (!startISO || Number.isNaN(start.getTime())) {
+    return {
+      day: fallback?.day ?? "",
+      date: fallback?.date ?? "",
+      time: fallback?.time ?? "",
+      timeZone: "",
+    };
+  }
+
   const end = endISO ? new Date(endISO) : null;
 
   // Día relativo, comparando el día calendario LOCAL (no UTC)

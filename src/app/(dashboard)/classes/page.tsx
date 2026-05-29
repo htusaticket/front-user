@@ -440,7 +440,11 @@ export default function ClassesPage() {
                   <>
                     <div className="space-y-4">
                       {paginatedSchedule.map((classItem) => {
-                        const schedule = formatClassSchedule(classItem.startTime, classItem.endTime);
+                        const schedule = formatClassSchedule(classItem.startTime, classItem.endTime, {
+                          day: classItem.day,
+                          date: classItem.date,
+                          time: classItem.time,
+                        });
                         return (
                           <motion.div
                             key={classItem.id}
@@ -649,7 +653,11 @@ export default function ClassesPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {paginatedAvailable.map((classItem) => {
                     const isUnlimited = classItem.capacity.max === null;
-                    const schedule = formatClassSchedule(classItem.startTime, classItem.endTime);
+                    const schedule = formatClassSchedule(classItem.startTime, classItem.endTime, {
+                      day: classItem.day,
+                      date: classItem.date,
+                      time: classItem.time,
+                    });
 
                     const typeBadge = (() => {
                       switch (classItem.type) {

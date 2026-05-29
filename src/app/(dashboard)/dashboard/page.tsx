@@ -124,7 +124,11 @@ export default function DashboardPage() {
                         Schedule
                       </p>
                       {(() => {
-                        const s = formatClassSchedule(data.nextClass.startTime, data.nextClass.endTime);
+                        const s = formatClassSchedule(data.nextClass.startTime, data.nextClass.endTime, {
+                          day: data.nextClass.day,
+                          date: data.nextClass.date,
+                          time: data.nextClass.time,
+                        });
                         return (
                           <p
                             className="mt-1 text-base font-bold text-gray-900"
