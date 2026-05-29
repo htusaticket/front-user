@@ -10,9 +10,11 @@ export interface NextClass {
   id: number;
   title: string;
   type: "regular" | "workshop";
-  day: string; // "Today", "Tomorrow", "Monday", etc.
+  day: string; // "Today", "Tomorrow", "Monday", etc. (zona fija del backend; usar startTime/endTime para mostrar)
   date: string; // "Jan 29"
   time: string; // "18:00 - 19:00"
+  startTime: string; // ISO 8601 (UTC) — fuente de verdad para mostrar en la zona local
+  endTime: string; // ISO 8601 (UTC)
   meetLink: string | null;
   materialsLink: string | null;
 }

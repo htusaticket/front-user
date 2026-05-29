@@ -23,17 +23,11 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import api from "@/lib/api";
-import { isClassStartingSoon, isLateCancellation } from "@/lib/utils/date-utils";
+import { isClassStartingSoon, isLateCancellation, formatClassSchedule } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useClassesStore } from "@/store/classes";
 import { useProfileStore } from "@/store/profile";
 import type { ClassSession } from "@/types/classes";
-
-// Helper to detect if a class has already ended
-const MONTH_MAP: Record<string, number> = {
-  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-};
 
 // Turn raw URLs inside a description into clickable links. Keeps preceding
 // tags like "[RECORDING]" intact — we only replace the http(s) token itself.
@@ -73,33 +67,11 @@ function renderDescriptionWithLinks(text: string): React.ReactNode {
 }
 
 function isClassPast(classItem: ClassSession): boolean {
-  if (classItem.day === "Tomorrow") return false;
-  if (classItem.day === "Today") {
-    const endTimeStr = classItem.time.split(" - ")[1];
-    if (endTimeStr) {
-      const [hours, minutes] = endTimeStr.split(":").map(Number);
-      if (hours !== undefined && minutes !== undefined) {
-        const classEndTime = new Date();
-        classEndTime.setHours(hours, minutes, 0, 0);
-        return classEndTime.getTime() < Date.now();
-      }
-    }
-    return false;
-  }
-  // Parse date like "Mar 25"
-  if (classItem.date) {
-    const parts = classItem.date.split(" ");
-    if (parts.length === 2) {
-      const month = MONTH_MAP[parts[0]];
-      const day = parseInt(parts[1]);
-      if (month !== undefined && !isNaN(day)) {
-        const now = new Date();
-        const classDate = new Date(now.getFullYear(), month, day, 23, 59, 59);
-        return classDate < now;
-      }
-    }
-  }
-  return false;
+  // Una clase está "pasada" cuando su instante de fin ya quedó atrás.
+  // Comparamos timestamps absolutos (ISO), así es correcto en cualquier zona horaria.
+  if (!classItem.startTime) return false;
+  const end = classItem.endTime ? new Date(classItem.endTime) : new Date(classItem.startTime);
+  return end.getTime() < Date.now();
 }
 
 export default function ClassesPage() {
@@ -169,7 +141,7 @@ export default function ClassesPage() {
   const handleCancelClick = (classItem: ClassSession) => {
     setSelectedClass(classItem);
     // Verificar si es cancelación tardía
-    const isLate = isLateCancellation(classItem.day, classItem.time);
+    const isLate = isLateCancellation(classItem.startTime);
     setWillApplyStrike(isLate);
     setShowCancelModal(true);
   };
@@ -467,144 +439,152 @@ export default function ClassesPage() {
                 {allSchedule.length > 0 ? (
                   <>
                     <div className="space-y-4">
-                      {paginatedSchedule.map((classItem) => (
-                        <motion.div
-                          key={classItem.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="overflow-hidden rounded-2xl border-2 border-brand-cyan-dark bg-white shadow-lg transition-all hover:shadow-md"
-                        >
-                          <div className="bg-brand-cyan-dark px-4 py-3 sm:px-6">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-5 w-5 text-white" />
-                              <span className="text-sm font-bold uppercase tracking-wider text-white">
+                      {paginatedSchedule.map((classItem) => {
+                        const schedule = formatClassSchedule(classItem.startTime, classItem.endTime);
+                        return (
+                          <motion.div
+                            key={classItem.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="overflow-hidden rounded-2xl border-2 border-brand-cyan-dark bg-white shadow-lg transition-all hover:shadow-md"
+                          >
+                            <div className="bg-brand-cyan-dark px-4 py-3 sm:px-6">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-5 w-5 text-white" />
+                                <span className="text-sm font-bold uppercase tracking-wider text-white">
                               Enrolled
-                              </span>
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="p-4 sm:p-6">
-                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3">
-                                  <h3 className="font-display text-lg font-bold text-brand-primary sm:text-xl">
-                                    {classItem.title}
-                                  </h3>
-                                  {classItem.type === "workshop" && (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-bold text-brand-primary">
-                                      <Sparkles className="h-3 w-3" />
+                            <div className="p-4 sm:p-6">
+                              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="font-display text-lg font-bold text-brand-primary sm:text-xl">
+                                      {classItem.title}
+                                    </h3>
+                                    {classItem.type === "workshop" && (
+                                      <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-bold text-brand-primary">
+                                        <Sparkles className="h-3 w-3" />
                                     Workshop
-                                    </span>
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="mt-1 text-sm text-gray-500">
+                                    {classItem.description
+                                      ? renderDescriptionWithLinks(classItem.description)
+                                      : null}
+                                  </p>
+
+                                  <div className="mt-4 flex flex-wrap gap-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
+                                        <Calendar className="h-4 w-4 text-brand-cyan-dark" />
+                                      </div>
+                                      <span className="font-semibold">
+                                        {schedule.day}, {schedule.date}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
+                                        <Clock className="h-4 w-4 text-brand-cyan-dark" />
+                                      </div>
+                                      <span title={`Shown in your local time${schedule.timeZone ? ` (${schedule.timeZone})` : ""}`}>
+                                        {schedule.time}
+                                        {schedule.timeZone && (
+                                          <span className="ml-1 text-xs text-gray-400">{schedule.timeZone}</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
+                                  {isClassPast(classItem) ? (
+                                  /* Past class - show "Class Ended" badge, no action buttons */
+                                    <div className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 border-2 border-gray-200 px-6 py-3 text-sm font-bold text-gray-400 cursor-default">
+                                      <CheckCircle className="h-4 w-4" />
+                                    Class Ended
+                                    </div>
+                                  ) : isPunished ? (
+                                    <div
+                                      className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
+                                      title={`Access restricted until ${punishedUntilFormatted}`}
+                                    >
+                                      <ShieldAlert className="h-4 w-4" />
+                                  Access Restricted
+                                    </div>
+                                  ) : classItem.meetLink ? (
+                                    <motion.a
+                                      href={classItem.meetLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all ${
+                                        isClassStartingSoon(classItem.startTime, classItem.endTime)
+                                          ? "bg-brand-cyan-dark shadow-brand-cyan-dark/30 hover:bg-brand-cyan animate-pulse"
+                                          : "bg-brand-cyan-dark/80 shadow-brand-cyan-dark/20 hover:bg-brand-cyan-dark"
+                                      }`}
+                                    >
+                                      <Video className="h-4 w-4" />
+                                      {isClassStartingSoon(classItem.startTime, classItem.endTime) ? "Join Class Now" : "Class Link"}
+                                    </motion.a>
+                                  ) : (
+                                    <button
+                                      disabled
+                                      className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-gray-400 cursor-not-allowed"
+                                    >
+                                      <Video className="h-4 w-4" />
+                                  Link available soon
+                                    </button>
+                                  )}
+
+                                  {/* Hide Cancel button for past classes */}
+                                  {!isClassPast(classItem) && (
+                                    <motion.button
+                                      onClick={() => handleCancelClick(classItem)}
+                                      whileHover={{
+                                        scale: 1.02,
+                                        backgroundColor: "#FEF2F2",
+                                        borderColor: "#FCA5A5",
+                                      }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
+                                    >
+                                  Cancel
+                                    </motion.button>
+                                  )}
+
+                                  {classItem.materialsLink && (
+                                    <motion.button
+                                      onClick={() => {
+                                        const links = classItem.materialsLink!
+                                          .split(/[,\n;]+/)
+                                          .map(l => l.trim())
+                                          .filter(Boolean);
+                                        if (links.length === 1) {
+                                          window.open(links[0], "_blank");
+                                        } else {
+                                          setSelectedMaterials(links);
+                                          setSelectedMaterialsTitle(classItem.title);
+                                          setShowMaterialsModal(true);
+                                        }
+                                      }}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
+                                    >
+                                  📄 View Materials
+                                    </motion.button>
                                   )}
                                 </div>
-
-                                <p className="mt-1 text-sm text-gray-500">
-                                  {classItem.description
-                                    ? renderDescriptionWithLinks(classItem.description)
-                                    : null}
-                                </p>
-
-                                <div className="mt-4 flex flex-wrap gap-4">
-                                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
-                                      <Calendar className="h-4 w-4 text-brand-cyan-dark" />
-                                    </div>
-                                    <span className="font-semibold">
-                                      {classItem.day}, {classItem.date}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50">
-                                      <Clock className="h-4 w-4 text-brand-cyan-dark" />
-                                    </div>
-                                    <span>{classItem.time}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="mt-4 flex flex-col gap-3 sm:flex-row lg:mt-0">
-                                {isClassPast(classItem) ? (
-                                  /* Past class - show "Class Ended" badge, no action buttons */
-                                  <div className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 border-2 border-gray-200 px-6 py-3 text-sm font-bold text-gray-400 cursor-default">
-                                    <CheckCircle className="h-4 w-4" />
-                                    Class Ended
-                                  </div>
-                                ) : isPunished ? (
-                                  <div
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-red-50 border-2 border-red-200 px-6 py-3 text-sm font-bold text-red-400 cursor-not-allowed"
-                                    title={`Access restricted until ${punishedUntilFormatted}`}
-                                  >
-                                    <ShieldAlert className="h-4 w-4" />
-                                  Access Restricted
-                                  </div>
-                                ) : classItem.meetLink ? (
-                                  <motion.a
-                                    href={classItem.meetLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all ${
-                                      isClassStartingSoon(classItem.time, classItem.day)
-                                        ? "bg-brand-cyan-dark shadow-brand-cyan-dark/30 hover:bg-brand-cyan animate-pulse"
-                                        : "bg-brand-cyan-dark/80 shadow-brand-cyan-dark/20 hover:bg-brand-cyan-dark"
-                                    }`}
-                                  >
-                                    <Video className="h-4 w-4" />
-                                    {isClassStartingSoon(classItem.time, classItem.day) ? "Join Class Now" : "Class Link"}
-                                  </motion.a>
-                                ) : (
-                                  <button
-                                    disabled
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-gray-400 cursor-not-allowed"
-                                  >
-                                    <Video className="h-4 w-4" />
-                                  Link available soon
-                                  </button>
-                                )}
-
-                                {/* Hide Cancel button for past classes */}
-                                {!isClassPast(classItem) && (
-                                  <motion.button
-                                    onClick={() => handleCancelClick(classItem)}
-                                    whileHover={{
-                                      scale: 1.02,
-                                      backgroundColor: "#FEF2F2",
-                                      borderColor: "#FCA5A5",
-                                    }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="rounded-xl border-2 border-transparent bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600 transition-all hover:text-red-600"
-                                  >
-                                  Cancel
-                                  </motion.button>
-                                )}
-
-                                {classItem.materialsLink && (
-                                  <motion.button
-                                    onClick={() => {
-                                      const links = classItem.materialsLink!
-                                        .split(/[,\n;]+/)
-                                        .map(l => l.trim())
-                                        .filter(Boolean);
-                                      if (links.length === 1) {
-                                        window.open(links[0], "_blank");
-                                      } else {
-                                        setSelectedMaterials(links);
-                                        setSelectedMaterialsTitle(classItem.title);
-                                        setShowMaterialsModal(true);
-                                      }
-                                    }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm font-bold text-brand-primary transition-all hover:border-brand-cyan-dark hover:bg-gray-50"
-                                  >
-                                  📄 View Materials
-                                  </motion.button>
-                                )}
                               </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        );
+                      })}
                     </div>
                     {totalSchedulePages > 1 && (
                       <div className="mt-6 flex items-center justify-center gap-4">
@@ -669,6 +649,7 @@ export default function ClassesPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {paginatedAvailable.map((classItem) => {
                     const isUnlimited = classItem.capacity.max === null;
+                    const schedule = formatClassSchedule(classItem.startTime, classItem.endTime);
 
                     const typeBadge = (() => {
                       switch (classItem.type) {
@@ -724,13 +705,19 @@ export default function ClassesPage() {
                             <div className="flex items-center gap-3 text-sm text-gray-700">
                               <Calendar className="h-4 w-4 text-gray-400" />
                               <span className="font-medium">
-                                {classItem.day}, {classItem.date}
+                                {schedule.day}, {schedule.date}
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-700">
                               <Clock className="h-4 w-4 text-gray-400" />
-                              <span className="font-medium">
-                                {classItem.time}
+                              <span
+                                className="font-medium"
+                                title={`Shown in your local time${schedule.timeZone ? ` (${schedule.timeZone})` : ""}`}
+                              >
+                                {schedule.time}
+                                {schedule.timeZone && (
+                                  <span className="ml-1 text-xs text-gray-400">{schedule.timeZone}</span>
+                                )}
                               </span>
                             </div>
 
@@ -765,7 +752,7 @@ export default function ClassesPage() {
                             </div>
                           ) : classItem.isEnrolled ? (
                             // Usuario ya inscrito
-                            isClassStartingSoon(classItem.time, classItem.day) ? (
+                            isClassStartingSoon(classItem.startTime, classItem.endTime) ? (
                               <motion.a
                                 href={classItem.meetLink ?? "#"}
                                 target="_blank"

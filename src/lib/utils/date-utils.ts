@@ -1,36 +1,88 @@
+const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+export interface ClassScheduleDisplay {
+  /** "Today", "Tomorrow" o el día de la semana, en la zona local del usuario */
+  day: string;
+  /** "May 28" en la zona local del usuario */
+  date: string;
+  /** "13:30 - 14:30" en la zona local del usuario */
+  time: string;
+  /** Etiqueta de la zona detectada del navegador, ej. "GMT-5" */
+  timeZone: string;
+}
+
+/**
+ * Etiqueta corta de la zona horaria del navegador para una fecha dada (ej. "GMT-5").
+ */
+function getTimeZoneLabel(date: Date): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZoneName: "shortOffset",
+    }).formatToParts(date);
+    return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Convierte los timestamps ISO (UTC) de una clase a strings formateados
+ * en la zona horaria local del navegador del usuario.
+ *
+ * Reemplaza los strings day/date/time que el backend formateaba en una zona fija.
+ */
+export function formatClassSchedule(startISO: string, endISO?: string): ClassScheduleDisplay {
+  const start = new Date(startISO);
+  const end = endISO ? new Date(endISO) : null;
+
+  // Día relativo, comparando el día calendario LOCAL (no UTC)
+  const now = new Date();
+  const startMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round(
+    (startMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  let day: string;
+  if (diffDays === 0) day = "Today";
+  else if (diffDays === 1) day = "Tomorrow";
+  else day = WEEKDAYS[start.getDay()]!;
+
+  const date = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const formatTime = (d: Date): string =>
+    d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const time = end ? `${formatTime(start)} - ${formatTime(end)}` : formatTime(start);
+
+  return { day, date, time, timeZone: getTimeZoneLabel(start) };
+}
+
 /**
  * Verifica si una clase está disponible para unirse.
- * El link de Join está disponible durante todo el día de la clase,
- * desde el inicio del día hasta 1 hora después de que termine.
- * Solo aplica para clases de HOY.
+ * El link de Join está disponible durante todo el día de la clase (zona local),
+ * hasta 1 hora después de que termine.
  */
-export function isClassStartingSoon(timeString: string, dayString?: string): boolean {
-  // Solo mostrar "Join" para clases de hoy
-  if (dayString && dayString !== "Today") {
-    return false;
-  }
+export function isClassStartingSoon(startISO: string, endISO?: string): boolean {
+  if (!startISO) return false;
 
-  // El timeString viene en formato "18:00 - 19:00" del backend
-  const parts = timeString.split(" - ");
-  const endTimeStr = parts[1] || parts[0];
-  
-  if (!endTimeStr) return false;
-
-  // Crear un Date object para hoy con la hora de fin de la clase
+  const start = new Date(startISO);
   const now = new Date();
-  const [hours, minutes] = endTimeStr.split(":").map(Number);
-  
-  if (hours === undefined || minutes === undefined) return false;
 
-  const classEndTime = new Date();
-  classEndTime.setHours(hours, minutes, 0, 0);
+  // Solo para clases de hoy, según el día calendario local del usuario
+  if (start.toDateString() !== now.toDateString()) return false;
 
-  // Disponible todo el día de hoy, hasta 1 hora después de que termine
-  const diffMs = classEndTime.getTime() - now.getTime();
-  const diffMinutes = diffMs / (1000 * 60);
+  const end = endISO ? new Date(endISO) : start;
+  const cutoff = end.getTime() + 60 * 60 * 1000; // 1 hora después del fin
 
-  // Disponible si aún no ha pasado 1 hora desde el fin de la clase
-  return diffMinutes >= -60;
+  return now.getTime() <= cutoff;
 }
 
 /**
@@ -53,35 +105,13 @@ export function formatRelativeTime(isoString: string): string {
 }
 
 /**
- * Calcula si una cancelación es tardía (menos de 24 horas)
- * Usado para determinar si se debe mostrar la advertencia de strike
+ * Calcula si una cancelación es tardía (menos de 24 horas antes del inicio).
+ * Usa el instante absoluto de inicio (ISO), por lo que es correcto en cualquier zona.
  */
-export function isLateCancellation(day: string, timeString: string): boolean {
-  const now = new Date();
-  
-  // Si es "Today", verificar la hora
-  if (day === "Today") {
-    const startTimeStr = timeString.split(" - ")[0];
-    if (!startTimeStr) return false;
-    
-    const [hours, minutes] = startTimeStr.split(":").map(Number);
-    if (hours === undefined || minutes === undefined) return false;
-    
-    const classTime = new Date();
-    classTime.setHours(hours, minutes, 0, 0);
-    
-    const hoursUntilClass = (classTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return hoursUntilClass < 24;
-  }
-  
-  // Si es "Tomorrow", siempre es menos de 24 horas
-  if (day === "Tomorrow") {
-    return true;
-  }
-  
-  // Para otros días de la semana, necesitamos calcular
-  // Por simplicidad, asumimos que si no es Today, puede ser más de 24h
-  return false;
+export function isLateCancellation(startISO: string): boolean {
+  if (!startISO) return false;
+  const hoursUntilClass = (new Date(startISO).getTime() - Date.now()) / (1000 * 60 * 60);
+  return hoursUntilClass < 24;
 }
 
 /**

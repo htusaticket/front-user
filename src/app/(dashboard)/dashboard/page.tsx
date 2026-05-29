@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { isClassStartingSoon, formatRelativeTime } from "@/lib/utils/date-utils";
+import { isClassStartingSoon, formatRelativeTime, formatClassSchedule } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useDashboardStore } from "@/store/dashboard";
 import { useProfileStore } from "@/store/profile";
@@ -123,9 +123,20 @@ export default function DashboardPage() {
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                         Schedule
                       </p>
-                      <p className="mt-1 text-base font-bold text-gray-900">
-                        {data.nextClass.day}, {data.nextClass.time}
-                      </p>
+                      {(() => {
+                        const s = formatClassSchedule(data.nextClass.startTime, data.nextClass.endTime);
+                        return (
+                          <p
+                            className="mt-1 text-base font-bold text-gray-900"
+                            title={`Shown in your local time${s.timeZone ? ` (${s.timeZone})` : ""}`}
+                          >
+                            {s.day}, {s.time}
+                            {s.timeZone && (
+                              <span className="ml-1 text-xs font-medium text-gray-400">{s.timeZone}</span>
+                            )}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -146,7 +157,7 @@ export default function DashboardPage() {
 
                 <div className="mt-auto pt-4 sm:pt-6">
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    {isClassStartingSoon(data.nextClass.time, data.nextClass.day) ? (
+                    {isClassStartingSoon(data.nextClass.startTime, data.nextClass.endTime) ? (
                       <motion.a
                         href={data.nextClass.meetLink || "#"}
                         target="_blank"
