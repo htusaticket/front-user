@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { isSubscriptionRequiredError } from "@/lib/api";
 import { isClassStartingSoon, formatRelativeTime, formatClassSchedule } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useDashboardStore } from "@/store/dashboard";
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchProfile();
     fetchDashboard().catch((err) => {
+      if (isSubscriptionRequiredError(err)) return;
       toast.error("Error loading dashboard data");
       console.error(err);
     });

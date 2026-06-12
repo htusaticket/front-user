@@ -74,4 +74,9 @@ export const getErrorCode = (error: unknown): string | undefined => {
   return undefined;
 };
 
+// El backend devuelve 403 SUBSCRIPTION_REQUIRED para usuarios sin subscripción activa.
+// Es un caso esperado (el NoSubscriptionOverlay maneja la UX), no un error a mostrar.
+export const isSubscriptionRequiredError = (error: unknown): boolean =>
+  getErrorCode(error) === "SUBSCRIPTION_REQUIRED";
+
 export default api;

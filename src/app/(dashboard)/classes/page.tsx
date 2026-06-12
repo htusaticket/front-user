@@ -22,7 +22,7 @@ import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import api from "@/lib/api";
+import api, { isSubscriptionRequiredError } from "@/lib/api";
 import { isClassStartingSoon, isLateCancellation, formatClassSchedule } from "@/lib/utils/date-utils";
 import { useAuthStore } from "@/store/auth";
 import { useClassesStore } from "@/store/classes";
@@ -127,11 +127,13 @@ export default function ClassesPage() {
   useEffect(() => {
     if (activeTab === "available") {
       fetchAvailableClasses().catch((err) => {
+        if (isSubscriptionRequiredError(err)) return;
         toast.error("Error loading available classes");
         console.error(err);
       });
     } else {
       fetchMySchedule().catch((err) => {
+        if (isSubscriptionRequiredError(err)) return;
         toast.error("Error loading your schedule");
         console.error(err);
       });
